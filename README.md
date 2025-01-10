@@ -8,7 +8,11 @@
 
 # TODO
 
+- [] test wagmi hooks
+
 - [] load token and token sale contracts
+
+- [] re-write errorPage
 
 ## token sale
 

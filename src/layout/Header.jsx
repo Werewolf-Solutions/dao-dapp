@@ -7,7 +7,6 @@ export default function Header() {
   const account = useAccount();
   const { connectors, connect, status, error } = useConnect();
   const { disconnect } = useDisconnect();
-  const { connectMetamask } = useChain();
   const [nav, setNav] = useState(false);
   const [isPopupOpen, setIsPopupOpen] = useState(false); // State to manage popup visibility
 

@@ -1,13 +1,15 @@
 import React, { useState } from "react";
+import { useChain } from "../contexts/ChainContext";
 
 function formatNumber(num) {
   return new Intl.NumberFormat().format(num);
 }
 
 export default function TokenSale() {
+  const { ETHBalance, tokenBalance } = useChain();
+
   // State
   const [price] = useState(0.05); // ETH per token
-  const [ETHbalance, setETHbalance] = useState(2.0); // User's ETH balance
   const [balance, setBalance] = useState(0); // User's token balance
   const [totAmount, setTotAmount] = useState(1000); // Total tokens left
   const [amount, setAmount] = useState(1); // Amount of tokens to buy
@@ -33,7 +35,7 @@ export default function TokenSale() {
       return;
     }
 
-    if (totalCost > ETHbalance) {
+    if (totalCost > ETHBalance.formatted) {
       setMessage("Insufficient ETH balance.");
       setIsPopupOpen(true);
     } else if (amount > totAmount) {
@@ -41,7 +43,6 @@ export default function TokenSale() {
       setIsPopupOpen(true);
     } else {
       // Update balances
-      setETHbalance((prev) => prev - totalCost);
       setBalance((prev) => prev + amount);
       setTotAmount((prev) => prev - amount);
       setMessage("Purchase successful!");
@@ -66,11 +67,10 @@ export default function TokenSale() {
           </p>
           <p>
             ETH Balance:{" "}
-            <span className="font-semibold">{ETHbalance.toFixed(2)} ETH</span>
+            <span className="font-semibold">{ETHBalance?.formatted} ETH</span>
           </p>
           <p>
-            Token Balance:{" "}
-            <span className="font-semibold">{formatNumber(balance)}</span>
+            Token Balance: <span className="font-semibold">{tokenBalance}</span>
           </p>
           <p>
             Tokens Left:{" "}

@@ -8,9 +8,13 @@
 
 # TODO
 
+- [] re-write ChainContext
+
+  - [] load all the contracts
+
 - [] test wagmi hooks
 
-- [] load token and token sale contracts
+  - [>] show ETH and WLF balances in Account page
 
 - [] re-write errorPage
 

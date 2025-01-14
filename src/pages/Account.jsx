@@ -38,7 +38,7 @@ export default function Account() {
               <p>
                 <span className="font-semibold">ETH Balance:</span>
               </p>
-              {ETHBalance.formatted}
+              {ETHBalance?.formatted}
             </div>
 
             {account.status === "connected" && (

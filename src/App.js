@@ -5,10 +5,10 @@ import { useChain } from "./contexts/ChainContext";
 import { useEffect } from "react";
 
 function App() {
-  const { deployContracts } = useChain();
+  const { loadContracts } = useChain();
 
   useEffect(() => {
-    deployContracts();
+    loadContracts();
   }, []);
 
   return (

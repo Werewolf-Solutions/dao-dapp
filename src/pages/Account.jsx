@@ -7,7 +7,7 @@ export default function Account() {
   const { connectors, connect, status, error } = useConnect();
   const { disconnect } = useDisconnect();
 
-  const { ETHBalance } = useChain();
+  const { ETHBalance, tokenBalance, tokenTotSupply } = useChain();
 
   return (
     <div className="min-h-screen flex flex-col justify-center items-center bg-[#1a202c] text-[#fff]">
@@ -25,20 +25,24 @@ export default function Account() {
             <h2 className="text-2xl font-bold mb-4">Account Information</h2>
             <div className="text-left space-y-2">
               <p>
-                <span className="font-semibold">Status:</span> {account.status}
+                <span className="font-semibold">Status: </span> {account.status}
               </p>
               <p>
-                <span className="font-semibold">Addresses:</span>
+                <span className="font-semibold">Addresses: </span>
                 {JSON.stringify(account.addresses)}
               </p>
               <p>
-                <span className="font-semibold">Chain ID:</span>{" "}
+                <span className="font-semibold">Chain ID: </span>
                 {account.chainId}
               </p>
               <p>
-                <span className="font-semibold">ETH Balance:</span>
+                <span className="font-semibold">ETH Balance: </span>
+                {Number(ETHBalance?.formatted).toFixed(2)}
               </p>
-              {ETHBalance?.formatted}
+              <p>
+                <span className="font-semibold">Token Balance: </span>
+                {tokenBalance}
+              </p>
             </div>
 
             {account.status === "connected" && (

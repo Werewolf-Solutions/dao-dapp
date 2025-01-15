@@ -23,7 +23,7 @@ export default function Header() {
   };
 
   useEffect(() => {
-    console.log("status changed: " + status);
+    // console.log("status changed: " + status);
     if (status === "success") {
       setIsPopupOpen(false);
     }

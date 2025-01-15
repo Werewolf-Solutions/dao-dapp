@@ -14,6 +14,7 @@ export const ChainProvider = ({ children }) => {
 
   const [ETHBalance, setETHBalance] = useState();
   const [tokenBalance, setTokenBalance] = useState();
+  const [tokenTotSupply, setTokenTotSupply] = useState();
 
   const getETHBalance = async () => {
     const account_balance = await getBalance(config, {
@@ -25,27 +26,98 @@ export const ChainProvider = ({ children }) => {
     setETHBalance(account_balance);
   };
 
-  // loadContracts function
-  const loadContracts = async () => {
+  const getTokenBalance = async () => {
     try {
-      getETHBalance(); // TODO: move it somewhere else
+      // Fetch the token's decimals
+      const decimals = await readContract(config, {
+        abi: tokenABI.abi,
+        address: tokenABI.address,
+        functionName: "decimals",
+      });
+      // console.log(`Token Decimals: ${decimals}`);
 
-      // Get MTK balance of account
-      const data = await readContract(config, {
+      // Fetch the raw balance as BigInt
+      const rawBalance = await readContract(config, {
         abi: tokenABI.abi,
         address: tokenABI.address,
         functionName: "balanceOf",
         args: [account.address],
       });
-      console.log(data);
 
-      // Total supply of MTK token
-      const result = await readContract(config, {
+      // console.log(`Raw Balance (BigInt): ${rawBalance}`);
+
+      // Convert raw balance to human-readable format as a string
+      const rawBalanceStr = rawBalance.toString();
+      const decimalsInt = parseInt(decimals, 10);
+
+      let readableBalance;
+      if (rawBalanceStr.length > decimalsInt) {
+        const wholePart = rawBalanceStr.slice(0, -decimalsInt); // Whole number part
+        const fractionalPart = rawBalanceStr.slice(-decimalsInt); // Fractional part
+        readableBalance = `${wholePart}.${fractionalPart}`.replace(
+          /\.?0+$/,
+          ""
+        ); // Trim trailing zeros
+      } else {
+        const fractionalPart = rawBalanceStr.padStart(decimalsInt, "0"); // Pad with leading zeros if needed
+        readableBalance = `0.${fractionalPart}`.replace(/\.?0+$/, ""); // Trim trailing zeros
+      }
+
+      // console.log(`Readable Balance: ${readableBalance}`);
+
+      // Set the token balance
+      setTokenBalance(readableBalance);
+    } catch (error) {
+      console.error("Error fetching token balance:", error);
+    }
+  };
+
+  const getTokenTotalSupply = async () => {
+    try {
+      // Fetch the token's decimals
+      const decimals = await readContract(config, {
+        abi: tokenABI.abi,
+        address: tokenABI.address,
+        functionName: "decimals",
+      });
+
+      // Fetch the total supply as BigInt
+      const rawSupply = await readContract(config, {
         abi: tokenABI.abi,
         address: tokenABI.address,
         functionName: "totalSupply",
       });
-      console.log(result);
+
+      // Convert raw supply to human-readable format as a string
+      const rawSupplyStr = rawSupply.toString();
+      const decimalsInt = parseInt(decimals, 10);
+
+      let readableSupply;
+      if (rawSupplyStr.length > decimalsInt) {
+        const wholePart = rawSupplyStr.slice(0, -decimalsInt); // Whole number part
+        const fractionalPart = rawSupplyStr.slice(-decimalsInt); // Fractional part
+        readableSupply = `${wholePart}.${fractionalPart}`.replace(/\.?0+$/, ""); // Trim trailing zeros
+      } else {
+        const fractionalPart = rawSupplyStr.padStart(decimalsInt, "0"); // Pad with leading zeros if needed
+        readableSupply = `0.${fractionalPart}`.replace(/\.?0+$/, ""); // Trim trailing zeros
+      }
+      // console.log(readableSupply);
+
+      // Set the token total supply
+      setTokenTotSupply(readableSupply);
+    } catch (error) {
+      console.error("Error fetching token total supply:", error);
+    }
+  };
+
+  // loadContracts function
+  const loadContracts = async () => {
+    try {
+      await getETHBalance(); // TODO: move it somewhere else
+
+      await getTokenBalance();
+
+      await getTokenTotalSupply();
     } catch (error) {
       console.error(error);
     }
@@ -55,10 +127,11 @@ export const ChainProvider = ({ children }) => {
   const contextValue = useMemo(
     () => ({
       loadContracts,
-      tokenBalance: tokenBalance ? tokenBalance.toString() : null,
-      ETHBalance,
+      tokenBalance: tokenBalance ? tokenBalance : null,
+      tokenTotSupply: tokenTotSupply ? tokenTotSupply : null,
+      ETHBalance: ETHBalance ? ETHBalance : null,
     }),
-    [loadContracts, tokenBalance, ETHBalance]
+    [loadContracts, tokenBalance, ETHBalance, tokenTotSupply]
   );
 
   return (

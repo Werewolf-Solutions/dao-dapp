@@ -8,22 +8,10 @@
 
 # TODO
 
-- [] re-write ChainContext
+- [>] wait for deploy script in dao-project
 
-  - [] load all the contracts
+- [] **token sale page:** buy tokens
 
-- [] test wagmi hooks
-
-  - [>] show ETH and WLF balances in Account page
+- [] **dao page:** make it closer to what it would look like. Add targets and so on
 
 - [] re-write errorPage
-
-## token sale
-
-- [] actually use real values
-
-- [] buy tokens
-
-## dao
-
-- [] make it closer to what it would look like. Add targets and so on

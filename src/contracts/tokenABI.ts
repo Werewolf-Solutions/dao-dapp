@@ -1,5 +1,5 @@
 export const tokenABI = {
-  address: "0x352e9591406060a0cf1b2e338790fb23694eb3b1",
+  address: "0x69d9846400888EE1F282A3312e59f79C050Aa2A6",
   abi: [
     {
       type: "function",
@@ -14,6 +14,13 @@ export const tokenABI = {
       stateMutability: "view",
       inputs: [],
       outputs: [{ name: "supply", type: "uint256" }],
+    },
+    {
+      type: "function",
+      name: "decimals",
+      stateMutability: "view",
+      inputs: [],
+      outputs: [{ name: "decimals", type: "uint256" }],
     },
   ],
 } as const;

@@ -1,20 +1,10 @@
-import { http, cookieStorage, createConfig, createStorage } from "wagmi";
-import { mainnet, sepolia } from "wagmi/chains";
-import { coinbaseWallet, injected, walletConnect } from "wagmi/connectors";
+import { http, createConfig } from "@wagmi/core";
+import { mainnet, sepolia } from "@wagmi/core/chains";
 
-export function getConfig() {
-  return createConfig({
-    chains: [mainnet, sepolia],
-    connectors: [injected(), coinbaseWallet()],
-    transports: {
-      [mainnet.id]: http(),
-      [sepolia.id]: http(),
-    },
-  });
-}
-
-declare module "wagmi" {
-  interface Register {
-    config: ReturnType<typeof getConfig>;
-  }
-}
+export const config = createConfig({
+  chains: [mainnet, sepolia],
+  transports: {
+    [mainnet.id]: http(),
+    [sepolia.id]: http(),
+  },
+});

@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useMemo } from "react";
 import { useReadContract, useAccount } from "wagmi";
 import { sepolia } from "wagmi/chains";
 import { getBalance, readContract } from "@wagmi/core";
-import { getConfig } from "../config.ts";
+import { config } from "../config.ts";
 
 import { tokenABI } from "../contracts/tokenABI.ts";
 
@@ -16,11 +16,11 @@ export const ChainProvider = ({ children }) => {
   const [tokenBalance, setTokenBalance] = useState();
 
   const getETHBalance = async () => {
-    const account_balance = await getBalance(getConfig(), {
+    const account_balance = await getBalance(config, {
       address: account.address,
       chainId: account.chainId,
     });
-    console.log(account_balance);
+    // console.log(account_balance);
 
     setETHBalance(account_balance);
   };
@@ -28,8 +28,10 @@ export const ChainProvider = ({ children }) => {
   // loadContracts function
   const loadContracts = async () => {
     try {
+      getETHBalance(); // TODO: move it somewhere else
+
       // Get MTK balance of account
-      const data = await readContract(getConfig(), {
+      const data = await readContract(config, {
         abi: tokenABI.abi,
         address: tokenABI.address,
         functionName: "balanceOf",
@@ -38,14 +40,12 @@ export const ChainProvider = ({ children }) => {
       console.log(data);
 
       // Total supply of MTK token
-      const result = await readContract(getConfig(), {
+      const result = await readContract(config, {
         abi: tokenABI.abi,
         address: tokenABI.address,
         functionName: "totalSupply",
       });
       console.log(result);
-
-      getETHBalance(); // TODO: move it somewhere else
     } catch (error) {
       console.error(error);
     }

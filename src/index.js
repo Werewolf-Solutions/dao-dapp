@@ -11,7 +11,7 @@ import { ChainProvider } from "./contexts/ChainContext";
 import Account from "./pages/Account";
 
 import { WagmiProvider } from "wagmi";
-import { getConfig } from "./config.ts";
+import { config } from "./config.ts";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
@@ -46,7 +46,7 @@ const router = createBrowserRouter([
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
-    <WagmiProvider config={getConfig()}>
+    <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
         <ChainProvider>
           <RouterProvider router={router} />

@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useMemo } from "react";
 import { useReadContract, useAccount } from "wagmi";
-import { sepolia } from "wagmi/chains";
 import { getBalance, readContract } from "@wagmi/core";
 import { config } from "../config.ts";
 
@@ -17,6 +16,8 @@ export const ChainProvider = ({ children }) => {
   const [tokenTotSupply, setTokenTotSupply] = useState();
 
   const getETHBalance = async () => {
+    console.log(account.chainId);
+
     const account_balance = await getBalance(config, {
       address: account.address,
       chainId: account.chainId,

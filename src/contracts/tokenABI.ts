@@ -1,5 +1,5 @@
 export const tokenABI = {
-  address: "0x69d9846400888EE1F282A3312e59f79C050Aa2A6",
+  address: "0x0165878A594ca255338adfa4d48449f69242Eb8F",
   abi: [
     {
       type: "function",

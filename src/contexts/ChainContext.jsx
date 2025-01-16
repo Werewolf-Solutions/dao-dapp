@@ -4,6 +4,8 @@ import { getBalance, readContract } from "@wagmi/core";
 import { config } from "../config.ts";
 
 import { tokenABI } from "../contracts/tokenABI.ts";
+import { werewolfTokenABI } from "../contracts/werewolfTokenABI.ts";
+import { tokenSaleABI } from "../contracts/tokenSaleABI.ts";
 
 // Create the context
 const ChainContext = createContext(null);
@@ -11,13 +13,13 @@ const ChainContext = createContext(null);
 export const ChainProvider = ({ children }) => {
   const account = useAccount();
 
-  const [ETHBalance, setETHBalance] = useState();
-  const [tokenBalance, setTokenBalance] = useState();
-  const [tokenTotSupply, setTokenTotSupply] = useState();
+  const [ETHBalance, setETHBalance] = useState(0);
+  const [tokenBalance, setTokenBalance] = useState(0);
+  const [tokenTotSupply, setTokenTotSupply] = useState(0);
+  const [amountInTokenSale, setAmountInTokenSale] = useState(0);
+  const [tokenPrice, setTokenPrice] = useState(0);
 
   const getETHBalance = async () => {
-    console.log(account.chainId);
-
     const account_balance = await getBalance(config, {
       address: account.address,
       chainId: account.chainId,
@@ -31,16 +33,16 @@ export const ChainProvider = ({ children }) => {
     try {
       // Fetch the token's decimals
       const decimals = await readContract(config, {
-        abi: tokenABI.abi,
-        address: tokenABI.address,
+        abi: werewolfTokenABI.abi,
+        address: werewolfTokenABI.address,
         functionName: "decimals",
       });
       // console.log(`Token Decimals: ${decimals}`);
 
       // Fetch the raw balance as BigInt
       const rawBalance = await readContract(config, {
-        abi: tokenABI.abi,
-        address: tokenABI.address,
+        abi: werewolfTokenABI.abi,
+        address: werewolfTokenABI.address,
         functionName: "balanceOf",
         args: [account.address],
       });
@@ -73,19 +75,55 @@ export const ChainProvider = ({ children }) => {
     }
   };
 
+  const getAmountInTokenSale = async () => {
+    const decimals = await readContract(config, {
+      abi: werewolfTokenABI.abi,
+      address: werewolfTokenABI.address,
+      functionName: "decimals",
+    });
+    const rawBalance = await readContract(config, {
+      abi: werewolfTokenABI.abi,
+      address: werewolfTokenABI.address,
+      functionName: "balanceOf",
+      args: [tokenSaleABI.address],
+    });
+    console.log(rawBalance);
+
+    // console.log(`Raw Balance (BigInt): ${rawBalance}`);
+
+    // Convert raw balance to human-readable format as a string
+    const rawBalanceStr = rawBalance.toString();
+    const decimalsInt = parseInt(decimals, 10);
+
+    let readableBalance;
+    if (rawBalanceStr.length > decimalsInt) {
+      const wholePart = rawBalanceStr.slice(0, -decimalsInt); // Whole number part
+      const fractionalPart = rawBalanceStr.slice(-decimalsInt); // Fractional part
+      readableBalance = `${wholePart}.${fractionalPart}`.replace(/\.?0+$/, ""); // Trim trailing zeros
+    } else {
+      const fractionalPart = rawBalanceStr.padStart(decimalsInt, "0"); // Pad with leading zeros if needed
+      readableBalance = `0.${fractionalPart}`.replace(/\.?0+$/, ""); // Trim trailing zeros
+    }
+
+    // console.log(`Readable Balance: ${readableBalance}`);
+
+    // Set the token balance
+    setAmountInTokenSale(readableBalance);
+  };
+
   const getTokenTotalSupply = async () => {
     try {
       // Fetch the token's decimals
       const decimals = await readContract(config, {
-        abi: tokenABI.abi,
-        address: tokenABI.address,
+        abi: werewolfTokenABI.abi,
+        address: werewolfTokenABI.address,
         functionName: "decimals",
       });
 
       // Fetch the total supply as BigInt
       const rawSupply = await readContract(config, {
-        abi: tokenABI.abi,
-        address: tokenABI.address,
+        abi: werewolfTokenABI.abi,
+        address: werewolfTokenABI.address,
         functionName: "totalSupply",
       });
 
@@ -111,6 +149,40 @@ export const ChainProvider = ({ children }) => {
     }
   };
 
+  const getTokenPrice = async () => {
+    const decimals = await readContract(config, {
+      abi: werewolfTokenABI.abi,
+      address: werewolfTokenABI.address,
+      functionName: "decimals",
+    });
+    const rawPrice = await readContract(config, {
+      abi: tokenSaleABI.abi,
+      address: tokenSaleABI.address,
+      functionName: "price",
+    });
+    console.log(rawPrice);
+
+    // Convert raw price to human-readable format as a string
+    const rawPriceStr = rawPrice.toString();
+    const decimalsInt = parseInt(decimals, 10);
+
+    let readablePrice;
+    if (rawPriceStr.length > decimalsInt) {
+      const wholePart = rawPriceStr.slice(0, -decimalsInt); // Whole number part
+      const fractionalPart = rawPriceStr.slice(-decimalsInt); // Fractional part
+      readablePrice = `${wholePart}.${fractionalPart}`.replace(/\.?0+$/, ""); // Trim trailing zeros
+    } else {
+      const fractionalPart = rawPriceStr.padStart(decimalsInt, "0"); // Pad with leading zeros if needed
+      readablePrice = `0.${fractionalPart}`.replace(/\.?0+$/, ""); // Trim trailing zeros
+    }
+    setTokenPrice(readablePrice);
+  };
+
+  const loadTokenSaleContract = async () => {
+    getAmountInTokenSale();
+    getTokenPrice();
+  };
+
   // loadContracts function
   const loadContracts = async () => {
     try {
@@ -119,6 +191,8 @@ export const ChainProvider = ({ children }) => {
       await getTokenBalance();
 
       await getTokenTotalSupply();
+
+      await loadTokenSaleContract();
     } catch (error) {
       console.error(error);
     }
@@ -131,8 +205,17 @@ export const ChainProvider = ({ children }) => {
       tokenBalance: tokenBalance ? tokenBalance : null,
       tokenTotSupply: tokenTotSupply ? tokenTotSupply : null,
       ETHBalance: ETHBalance ? ETHBalance : null,
+      amountInTokenSale: amountInTokenSale ? amountInTokenSale : null,
+      tokenPrice: tokenPrice ? tokenPrice : null,
     }),
-    [loadContracts, tokenBalance, ETHBalance, tokenTotSupply]
+    [
+      loadContracts,
+      tokenBalance,
+      ETHBalance,
+      tokenTotSupply,
+      amountInTokenSale,
+      tokenPrice,
+    ]
   );
 
   return (

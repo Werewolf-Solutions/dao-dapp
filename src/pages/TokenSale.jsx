@@ -6,12 +6,13 @@ function formatNumber(num) {
 }
 
 export default function TokenSale() {
-  const { ETHBalance, tokenBalance } = useChain();
+  const { ETHBalance, tokenBalance, amountInTokenSale, tokenPrice } =
+    useChain();
 
   // State
-  const [price] = useState(0.05); // ETH per token
+  const [price] = useState(tokenPrice); // ETH per token
   const [balance, setBalance] = useState(0); // User's token balance
-  const [totAmount, setTotAmount] = useState(1000); // Total tokens left
+  const [totAmount, setTotAmount] = useState(amountInTokenSale); // Total tokens left
   const [amount, setAmount] = useState(1); // Amount of tokens to buy
   const [message, setMessage] = useState("");
   const [isPopupOpen, setIsPopupOpen] = useState(false);
@@ -73,8 +74,7 @@ export default function TokenSale() {
             Token Balance: <span className="font-semibold">{tokenBalance}</span>
           </p>
           <p>
-            Tokens Left:{" "}
-            <span className="font-semibold">{formatNumber(totAmount)}</span>
+            Tokens Left: <span className="font-semibold">{totAmount}</span>
           </p>
         </div>
         <div className="mt-6">

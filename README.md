@@ -17,8 +17,24 @@ TokenSale: 0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82
 
 # TODO
 
-- [] **token sale page:** buy tokens
+- [] import all the contracts
 
-- [] **dao page:** make it closer to what it would look like. Add targets and so on
+  - [>] token sale
+
+    - [>] buyTokens
+
+  - [] werewolf token
+
+  - [] DAO
+
+- [] write all the pages
+
+  - [] DAO proposals
+
+  - [>] token sale
+
+  - [] staking
+
+  - [] ...
 
 - [] re-write errorPage

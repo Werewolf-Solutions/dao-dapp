@@ -1,5 +1,5 @@
 export const werewolfTokenABI = {
-  address: "0x0165878A594ca255338adfa4d48449f69242Eb8F",
+  address: "0x5081a39b8A5f0E35a8D959395a630b68B74Dd30f",
   abi: [
     {
       type: "function",

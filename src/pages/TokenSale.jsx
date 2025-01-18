@@ -1,12 +1,33 @@
 import React, { useState } from "react";
 import { useChain } from "../contexts/ChainContext";
 import { writeContract, readContract } from "@wagmi/core";
-// import { useWriteContract } from "wagmi";
 import { config } from "../config.ts";
 
 import { mockUSDT_ABI } from "../contracts/mockUSDT_ABI.ts";
 import { werewolfTokenABI } from "../contracts/werewolfTokenABI.ts";
 import { tokenSaleABI } from "../contracts/tokenSaleABI.ts";
+
+const tokenOptions = {
+  USDC: {
+    name: "USDC",
+    address: "0xUSDCAddress",
+    abi: mockUSDT_ABI.abi,
+    decimals: 6,
+  },
+  USDT: {
+    name: "USDT",
+    address: mockUSDT_ABI.address,
+    abi: mockUSDT_ABI.abi,
+    decimals: 6,
+  },
+  ETH: { name: "ETH", address: null, abi: null, decimals: 18 },
+  WBTC: {
+    name: "WBTC",
+    address: "0xWBTCAddress",
+    abi: mockUSDT_ABI.abi,
+    decimals: 8,
+  },
+};
 
 const decimals = 18;
 
@@ -18,15 +39,12 @@ export default function TokenSale() {
   const { ETHBalance, tokenBalance, amountInTokenSale, tokenPrice, account } =
     useChain();
 
-  // const { writeContract } = useWriteContract({
-  //   config,
-  // });
-
   // State
   const [price, setPrice] = useState(Number(tokenPrice)); // ETH per token
   const [balance, setBalance] = useState(tokenBalance); // User's token balance
   const [totAmount, setTotAmount] = useState(amountInTokenSale); // Total tokens left
   const [amount, setAmount] = useState(1); // Amount of tokens to buy
+  const [selectedToken, setSelectedToken] = useState("ETH"); // Default selected token
   const [message, setMessage] = useState("");
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -35,7 +53,12 @@ export default function TokenSale() {
     setAmount(Number(e.target.value));
   };
 
+  const handleTokenChange = (e) => {
+    setSelectedToken(e.target.value);
+  };
+
   const handleBuyClick = async () => {
+    const token = tokenOptions[selectedToken];
     const totalCost = amount * price;
 
     if (totAmount <= 0) {
@@ -50,7 +73,7 @@ export default function TokenSale() {
       return;
     }
 
-    if (totalCost > ETHBalance.formatted) {
+    if (selectedToken === "ETH" && totalCost > ETHBalance.formatted) {
       setMessage("Insufficient ETH balance.");
       setIsPopupOpen(true);
       return;
@@ -64,49 +87,37 @@ export default function TokenSale() {
 
     try {
       setIsProcessing(true);
-      // Validate input
-      if (amount <= 0) throw new Error("Amount must be greater than 0.");
-      if (totalCost > ETHBalance.raw)
-        throw new Error("Insufficient ETH balance.");
 
-      // Approve token if required (for mockUSDT)
-      const allowanceUSDT = await readContract(config, {
-        abi: mockUSDT_ABI.abi,
-        address: mockUSDT_ABI.address,
-        functionName: "allowance",
-        args: [account.address, tokenSaleABI.address],
-      });
-
-      console.log(allowanceUSDT);
-
-      // Approve token if required (for werewolfToken)
-      const allowanceWLF = await readContract(config, {
-        abi: werewolfTokenABI.abi,
-        address: werewolfTokenABI.address,
-        functionName: "allowance",
-        args: [account.address, tokenSaleABI.address],
-      });
-
-      console.log(allowanceWLF);
-
-      console.log(allowanceUSDT < totalCost);
-      if (allowanceUSDT < totalCost) {
-        const approveUSDT = await writeContract(config, {
-          abi: mockUSDT_ABI.abi,
-          address: mockUSDT_ABI.address,
-          functionName: "approve",
-          args: [tokenSaleABI.address, totalCost],
+      // Approve token if required (for non-ETH tokens)
+      if (selectedToken !== "ETH") {
+        const allowance = await readContract(config, {
+          abi: token.abi,
+          address: token.address,
+          functionName: "allowance",
+          args: [account.address, tokenSaleABI.address],
         });
-        console.log(approveUSDT);
-      }
 
-      if (allowanceWLF < totalCost) {
-        await writeContract(config, {
-          abi: werewolfTokenABI.abi,
-          address: werewolfTokenABI.address,
-          functionName: "approve",
-          args: [tokenSaleABI.address, totalCost],
+        console.log(allowance);
+        console.log(totalCost, token.decimals);
+        console.log(Math.floor(totalCost * 10 ** token.decimals));
+
+        if (allowance < totalCost * 10 ** token.decimals) {
+          let data = await writeContract(config, {
+            abi: token.abi,
+            address: token.address,
+            functionName: "approve",
+            args: [tokenSaleABI.address, totalCost * 10 ** token.decimals],
+          });
+          console.log(data);
+        }
+
+        const allowance_after = await readContract(config, {
+          abi: token.abi,
+          address: token.address,
+          functionName: "allowance",
+          args: [account.address, tokenSaleABI.address],
         });
+        console.log(allowance_after);
       }
 
       const tx = await writeContract(config, {
@@ -115,18 +126,17 @@ export default function TokenSale() {
         functionName: "buyTokens",
         args: [
           Math.floor(amount * 10 ** decimals), // _amount
-          werewolfTokenABI.address, // Replace with actual token0 address
-          mockUSDT_ABI.address, // Replace with actual token1 address
+          werewolfTokenABI.address, // token0 address
+          token.address || "0x0000000000000000000000000000000000000000", // token1 (ETH if null)
           3000, // fee (example: 3000 basis points = 0.3%)
-          -887220, // tickLower (example, replace with actual tick)
-          887220, // tickUpper (example, replace with actual tick)
+          -887220, // tickLower
+          887220, // tickUpper
           Math.floor(totalCost * 10 ** decimals), // amount0Desired
-          0, // amount1Desired (for single-token purchase, this can be 0)
+          0, // amount1Desired
         ],
       });
 
       console.log(tx);
-
       await tx.wait(); // Wait for transaction confirmation
 
       // Update balances after successful transaction
@@ -155,7 +165,9 @@ export default function TokenSale() {
         <div className="text-left space-y-2">
           <p>
             Price:{" "}
-            <span className="font-semibold">{formatNumber(price)} ETH</span>
+            <span className="font-semibold">
+              {formatNumber(price)} {selectedToken}
+            </span>
           </p>
           <p>
             ETH Balance:{" "}
@@ -169,6 +181,17 @@ export default function TokenSale() {
           </p>
         </div>
         <div className="mt-6">
+          <select
+            value={selectedToken}
+            onChange={handleTokenChange}
+            className="w-full p-2 rounded-lg text-black outline-none mb-2"
+          >
+            {Object.keys(tokenOptions).map((key) => (
+              <option key={key} value={key}>
+                {tokenOptions[key].name}
+              </option>
+            ))}
+          </select>
           <input
             type="number"
             placeholder="Enter amount"
@@ -177,7 +200,9 @@ export default function TokenSale() {
             className="w-full p-2 rounded-lg text-black outline-none mb-2"
             disabled={totAmount <= 0 || isProcessing}
           />
-          <div className="text-sm mb-4">= {amount * price} ETH</div>
+          <div className="text-sm mb-4">
+            = {formatNumber(amount * price)} {selectedToken}
+          </div>
           <button
             onClick={handleBuyClick}
             className={`w-full font-semibold py-2 rounded-lg transition-all ${
@@ -190,7 +215,7 @@ export default function TokenSale() {
             {isProcessing
               ? "Processing..."
               : totAmount > 0
-              ? "Buy Tokens"
+              ? `Buy Tokens with ${selectedToken}`
               : "Sold Out"}
           </button>
         </div>

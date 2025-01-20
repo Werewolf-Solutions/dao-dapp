@@ -14,6 +14,7 @@ export const ChainProvider = ({ children }) => {
   const account = useAccount();
 
   const [ETHBalance, setETHBalance] = useState(0);
+  const [USDTBalance, setUSDTBalance] = useState(0);
   const [tokenBalance, setTokenBalance] = useState(0);
   const [tokenTotSupply, setTokenTotSupply] = useState(0);
   const [amountInTokenSale, setAmountInTokenSale] = useState(0);

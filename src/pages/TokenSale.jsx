@@ -100,17 +100,17 @@ export default function TokenSale() {
 
       // Approve token if required (for non-ETH tokens)
       if (selectedToken !== "ETH") {
-        console.log(token);
-
         const balance = await readContract(config, {
           abi: token.abi,
           address: token.address,
           functionName: "balanceOf",
           args: [account.address],
         });
-        console.log("User balance:", balance);
         if (balance < totalCostInUnits) {
           console.error("Insufficient token balance.");
+          setMessage("Insufficient token balance.");
+          setIsProcessing(false);
+          setIsPopupOpen(true);
           return;
         }
 
@@ -121,29 +121,17 @@ export default function TokenSale() {
           args: [account.address, tokenSaleABI.address],
         });
 
-        console.log(allowance);
-
         if (allowance < totalCostInUnits) {
-          console.log("Approve");
-          let data = await writeContract(config, {
+          await writeContract(config, {
             abi: token.abi,
             address: token.address,
             functionName: "approve",
             args: [tokenSaleABI.address, totalCostInUnits],
           });
-          console.log(data);
         }
-
-        // const allowance_after = await readContract(config, {
-        //   abi: token.abi,
-        //   address: token.address,
-        //   functionName: "allowance",
-        //   args: [account.address, tokenSaleABI.address],
-        // });
-        // console.log(allowance_after);
       }
 
-      const tx = await writeContract(config, {
+      await writeContract(config, {
         abi: tokenSaleABI.abi,
         address: tokenSaleABI.address,
         functionName: "buyTokens",
@@ -158,9 +146,6 @@ export default function TokenSale() {
           0, // amount1Desired
         ],
       });
-
-      console.log(tx);
-      // await tx.wait(); // Wait for transaction confirmation
 
       // Update balances after successful transaction
       setBalance((prev) => prev + amount);

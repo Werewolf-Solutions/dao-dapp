@@ -4,8 +4,10 @@ import { getBalance, readContract } from "@wagmi/core";
 import { config } from "../config.ts";
 
 import { mockUSDT_ABI } from "../contracts/mockUSDT_ABI.ts";
-import { werewolfToken_ABI } from "../contracts/werewolfTokenABI.ts";
-import { tokenSale_ABI } from "../contracts/tokenSaleABI.ts";
+import { werewolfToken_ABI } from "../contracts/werewolfToken_ABI.ts";
+import { tokenSale_ABI } from "../contracts/tokenSale_ABI.ts";
+import { dao_ABI } from "../contracts/dao_ABI.ts";
+import { staking_ABI } from "../contracts/staking_ABI.ts";
 
 import contractsAddresses from "../utils/contracts-addresses.json";
 
@@ -25,6 +27,8 @@ export const ChainProvider = ({ children }) => {
   const [wlfTokenABI, setWlfTokenABI] = useState(werewolfToken_ABI);
   const [usdtABI, setUsdtABI] = useState(mockUSDT_ABI);
   const [tokenSaleABI, setTokenSaleABI] = useState(tokenSale_ABI);
+  const [daoABI, setDaoABI] = useState(dao_ABI);
+  const [stakingABI, setStakingABI] = useState(staking_ABI);
 
   const getETHBalance = async () => {
     const account_balance = await getBalance(config, {
@@ -116,10 +120,14 @@ export const ChainProvider = ({ children }) => {
     usdtABI.address = addresses.USDT;
     tokenSaleABI.address = addresses.TokenSale;
     wlfTokenABI.address = addresses.WerewolfToken;
+    daoABI.address = addresses.DAO;
+    stakingABI.address = addresses.Staking;
 
     setUsdtABI(usdtABI);
     setWlfTokenABI(wlfTokenABI);
     setTokenSaleABI(tokenSaleABI);
+    setDaoABI(daoABI);
+    setStakingABI(stakingABI);
   };
 
   const loadContracts = async () => {
@@ -140,10 +148,12 @@ export const ChainProvider = ({ children }) => {
     ETHBalance: ETHBalance || null,
     amountInTokenSale: amountInTokenSale || null,
     tokenPrice: tokenPrice || null,
-    account: account,
-    usdtABI: usdtABI,
-    tokenSaleABI: tokenSaleABI,
-    wlfTokenABI: wlfTokenABI,
+    account,
+    usdtABI,
+    tokenSaleABI,
+    wlfTokenABI,
+    daoABI,
+    stakingABI,
   };
 
   return (

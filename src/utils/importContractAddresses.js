@@ -4,7 +4,7 @@ const path = require("path");
 //const filePath = path.join(__dirname, 'test-data.txt');  // Ensure it's in the same folder as the script
 const filePath = path.resolve(
   __dirname,
-  "../../dao-project/script/output/deployed-addresses.txt"
+  "../../../dao-project/script/output/deployed-addresses.txt"
 );
 const outputFilePath = path.join(__dirname, "contracts-addresses.json"); // Output JSON will be saved in the same folder
 // Function to parse the file and create an object

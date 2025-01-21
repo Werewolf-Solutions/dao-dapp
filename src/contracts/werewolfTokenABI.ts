@@ -1,10 +1,7 @@
 import addresses from "../utils/contracts-addresses.json";
 
-// TODO: Handle different chain
-const chainId = "31337";
-
 export const werewolfTokenABI = {
-  address: addresses[chainId].WerewolfToken,
+  address: "0x",
   abi: [
     {
       type: "function",

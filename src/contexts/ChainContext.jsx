@@ -7,6 +7,8 @@ import { mockUSDT_ABI } from "../contracts/mockUSDT_ABI.ts";
 import { werewolfTokenABI } from "../contracts/werewolfTokenABI.ts";
 import { tokenSaleABI } from "../contracts/tokenSaleABI.ts";
 
+import contractsAddresses from "../utils/contracts-addresses.json";
+
 // Create the context
 const ChainContext = createContext(null);
 
@@ -103,8 +105,19 @@ export const ChainProvider = ({ children }) => {
     getTokenPrice();
   };
 
+  const importContractsAddresses = () => {
+    const chainId = account.chainId;
+    const addresses = contractsAddresses[chainId];
+    console.log(addresses);
+
+    mockUSDT_ABI.address = addresses.USDT;
+    tokenSaleABI.address = addresses.TokenSale;
+    werewolfTokenABI.address = addresses.WerewolfToken;
+  };
+
   const loadContracts = async () => {
     try {
+      importContractsAddresses();
       await getETHBalance();
       await getTokenBalance();
       await getTokenTotalSupply();

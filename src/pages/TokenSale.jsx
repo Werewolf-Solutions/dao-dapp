@@ -4,48 +4,50 @@ import { writeContract, readContract } from "@wagmi/core";
 import { parseUnits } from "viem";
 import { config } from "../config.ts";
 
-import { mockUSDT_ABI } from "../contracts/mockUSDT_ABI.ts";
-import { werewolfTokenABI } from "../contracts/werewolfTokenABI.ts";
-import { tokenSaleABI } from "../contracts/tokenSaleABI.ts";
-
-const tokenOptions = {
-  USDC: {
-    name: "USDC",
-    address: "0xUSDCAddress",
-    abi: mockUSDT_ABI.abi,
-    decimals: 6,
-  },
-  USDT: {
-    name: "USDT",
-    address: mockUSDT_ABI.address,
-    abi: mockUSDT_ABI.abi,
-    decimals: 6,
-  },
-  ETH: { name: "ETH", address: null, abi: null, decimals: 18 },
-  WBTC: {
-    name: "WBTC",
-    address: "0xWBTCAddress",
-    abi: mockUSDT_ABI.abi,
-    decimals: 8,
-  },
-};
-
-const decimals = 18;
-
 function formatNumber(num) {
   return new Intl.NumberFormat().format(num);
 }
 
 export default function TokenSale() {
-  const { ETHBalance, tokenBalance, amountInTokenSale, tokenPrice, account } =
-    useChain();
+  const {
+    ETHBalance,
+    tokenBalance,
+    amountInTokenSale,
+    tokenPrice,
+    account,
+    usdtABI,
+    tokenSaleABI,
+    wlfTokenABI,
+  } = useChain();
+
+  const tokenOptions = {
+    USDC: {
+      name: "USDC",
+      address: "0xUSDCAddress",
+      abi: usdtABI.abi,
+      decimals: 6,
+    },
+    USDT: {
+      name: "USDT",
+      address: usdtABI.address,
+      abi: usdtABI.abi,
+      decimals: 6,
+    },
+    ETH: { name: "ETH", address: null, abi: null, decimals: 18 },
+    WBTC: {
+      name: "WBTC",
+      address: "0xWBTCAddress",
+      abi: usdtABI.abi,
+      decimals: 8,
+    },
+  };
 
   // State
   const [price, setPrice] = useState(Number(tokenPrice)); // ETH per token
   const [balance, setBalance] = useState(tokenBalance); // User's token balance
   const [totAmount, setTotAmount] = useState(amountInTokenSale); // Total tokens left
   const [amount, setAmount] = useState(1); // Amount of tokens to buy
-  const [selectedToken, setSelectedToken] = useState("ETH"); // Default selected token
+  const [selectedToken, setSelectedToken] = useState("USDT"); // Default selected token
   const [message, setMessage] = useState("");
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -94,6 +96,8 @@ export default function TokenSale() {
 
       // Approve token if required (for non-ETH tokens)
       if (selectedToken !== "ETH") {
+        console.log(token);
+
         const balance = await readContract(config, {
           abi: token.abi,
           address: token.address,
@@ -140,13 +144,13 @@ export default function TokenSale() {
         address: tokenSaleABI.address,
         functionName: "buyTokens",
         args: [
-          Math.floor(amount * 10 ** decimals), // _amount
-          werewolfTokenABI.address, // token0 address
+          Math.floor(amount * 10 ** token.decimals), // _amount
+          wlfTokenABI.address, // token0 address
           token.address || "0x0000000000000000000000000000000000000000", // token1 (ETH if null)
           3000, // fee (example: 3000 basis points = 0.3%)
           -887220, // tickLower
           887220, // tickUpper
-          Math.floor(totalCost * 10 ** decimals), // amount0Desired
+          Math.floor(totalCost * 10 ** token.decimals), // amount0Desired
           0, // amount1Desired
         ],
       });

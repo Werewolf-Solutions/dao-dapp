@@ -1,6 +1,4 @@
-import addresses from "../utils/contracts-addresses.json";
-
-export const werewolfTokenABI = {
+export const werewolfToken_ABI = {
   address: "0x",
   abi: [
     {

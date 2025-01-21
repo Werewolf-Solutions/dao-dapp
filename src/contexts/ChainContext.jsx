@@ -4,8 +4,8 @@ import { getBalance, readContract } from "@wagmi/core";
 import { config } from "../config.ts";
 
 import { mockUSDT_ABI } from "../contracts/mockUSDT_ABI.ts";
-import { werewolfTokenABI } from "../contracts/werewolfTokenABI.ts";
-import { tokenSaleABI } from "../contracts/tokenSaleABI.ts";
+import { werewolfToken_ABI } from "../contracts/werewolfTokenABI.ts";
+import { tokenSale_ABI } from "../contracts/tokenSaleABI.ts";
 
 import contractsAddresses from "../utils/contracts-addresses.json";
 
@@ -22,6 +22,10 @@ export const ChainProvider = ({ children }) => {
   const [amountInTokenSale, setAmountInTokenSale] = useState(0);
   const [tokenPrice, setTokenPrice] = useState(0);
 
+  const [wlfTokenABI, setWlfTokenABI] = useState(werewolfToken_ABI);
+  const [usdtABI, setUsdtABI] = useState(mockUSDT_ABI);
+  const [tokenSaleABI, setTokenSaleABI] = useState(tokenSale_ABI);
+
   const getETHBalance = async () => {
     const account_balance = await getBalance(config, {
       address: account.address,
@@ -32,14 +36,14 @@ export const ChainProvider = ({ children }) => {
 
   const getAmountInTokenSale = async () => {
     const decimals = await readContract(config, {
-      abi: werewolfTokenABI.abi,
-      address: werewolfTokenABI.address,
+      abi: wlfTokenABI.abi,
+      address: wlfTokenABI.address,
       functionName: "decimals",
     });
 
     const rawBalance = await readContract(config, {
-      abi: werewolfTokenABI.abi,
-      address: werewolfTokenABI.address,
+      abi: wlfTokenABI.abi,
+      address: wlfTokenABI.address,
       functionName: "balanceOf",
       args: [tokenSaleABI.address],
     });
@@ -50,14 +54,14 @@ export const ChainProvider = ({ children }) => {
 
   const getTokenBalance = async () => {
     const decimals = await readContract(config, {
-      abi: werewolfTokenABI.abi,
-      address: werewolfTokenABI.address,
+      abi: wlfTokenABI.abi,
+      address: wlfTokenABI.address,
       functionName: "decimals",
     });
 
     const rawBalance = await readContract(config, {
-      abi: werewolfTokenABI.abi,
-      address: werewolfTokenABI.address,
+      abi: wlfTokenABI.abi,
+      address: wlfTokenABI.address,
       functionName: "balanceOf",
       args: [account.address],
     });
@@ -68,14 +72,14 @@ export const ChainProvider = ({ children }) => {
 
   const getTokenTotalSupply = async () => {
     const decimals = await readContract(config, {
-      abi: werewolfTokenABI.abi,
-      address: werewolfTokenABI.address,
+      abi: wlfTokenABI.abi,
+      address: wlfTokenABI.address,
       functionName: "decimals",
     });
 
     const rawSupply = await readContract(config, {
-      abi: werewolfTokenABI.abi,
-      address: werewolfTokenABI.address,
+      abi: wlfTokenABI.abi,
+      address: wlfTokenABI.address,
       functionName: "totalSupply",
     });
 
@@ -85,8 +89,8 @@ export const ChainProvider = ({ children }) => {
 
   const getTokenPrice = async () => {
     const decimals = await readContract(config, {
-      abi: werewolfTokenABI.abi,
-      address: werewolfTokenABI.address,
+      abi: wlfTokenABI.abi,
+      address: wlfTokenABI.address,
       functionName: "decimals",
     });
 
@@ -108,11 +112,14 @@ export const ChainProvider = ({ children }) => {
   const importContractsAddresses = () => {
     const chainId = account.chainId;
     const addresses = contractsAddresses[chainId];
-    console.log(addresses);
 
-    mockUSDT_ABI.address = addresses.USDT;
+    usdtABI.address = addresses.USDT;
     tokenSaleABI.address = addresses.TokenSale;
-    werewolfTokenABI.address = addresses.WerewolfToken;
+    wlfTokenABI.address = addresses.WerewolfToken;
+
+    setUsdtABI(usdtABI);
+    setWlfTokenABI(wlfTokenABI);
+    setTokenSaleABI(tokenSaleABI);
   };
 
   const loadContracts = async () => {
@@ -134,6 +141,9 @@ export const ChainProvider = ({ children }) => {
     amountInTokenSale: amountInTokenSale || null,
     tokenPrice: tokenPrice || null,
     account: account,
+    usdtABI: usdtABI,
+    tokenSaleABI: tokenSaleABI,
+    wlfTokenABI: wlfTokenABI,
   };
 
   return (

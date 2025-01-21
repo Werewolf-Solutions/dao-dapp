@@ -1,4 +1,4 @@
-export const tokenSaleABI = {
+export const tokenSale_ABI = {
   address: "0x",
   abi: [
     {

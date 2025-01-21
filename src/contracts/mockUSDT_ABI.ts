@@ -1,5 +1,5 @@
 export const mockUSDT_ABI = {
-  address: "0xc6e7DF5E7b4f2A278906862b61205850344D4e7d",
+  address: "0xd9003177dC465aAA89e20678675dca7FA5f5CAD5",
   abi: [
     {
       type: "function",

@@ -14,6 +14,7 @@ import { WagmiProvider } from "wagmi";
 import { config } from "./config.ts";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import Staking from "./pages/Staking.jsx";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +39,10 @@ const router = createBrowserRouter([
       {
         path: "/account",
         element: <Account />,
+      },
+      {
+        path: "/staking",
+        element: <Staking />,
       },
     ],
   },

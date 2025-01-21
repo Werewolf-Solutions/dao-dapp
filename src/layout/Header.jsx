@@ -45,6 +45,9 @@ export default function Header() {
           <Link to="/account">Account</Link>
         </li>
         <li className="p-4">
+          <Link to="/staking">Staking</Link>
+        </li>
+        <li className="p-4">
           <button
             className="bg-[#8e2421] text-white hover:bg-[#8e25219d] p-2 rounded-lg"
             onClick={handleConnectButtonClick} // Show popup when clicked

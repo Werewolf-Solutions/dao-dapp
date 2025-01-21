@@ -58,28 +58,6 @@ export default function TokenSale() {
     setSelectedToken(e.target.value);
   };
 
-  const approveUSDT = async () => {
-    const token = tokenOptions[selectedToken];
-    const totalCost = amount * price;
-    const totalCostInUnits = parseUnits(totalCost.toString(), token.decimals);
-    console.log(totalCostInUnits);
-
-    console.log("Approve");
-    console.log(mockUSDT_ABI.abi);
-    console.log(mockUSDT_ABI.address);
-    try {
-      let data = await writeContract(config, {
-        abi: mockUSDT_ABI.abi,
-        address: mockUSDT_ABI.address,
-        functionName: "approve",
-        args: [tokenSaleABI.address, 100000],
-      });
-      console.log(data);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
   const handleBuyClick = async () => {
     const token = tokenOptions[selectedToken];
     const totalCost = amount * price;
@@ -240,28 +218,20 @@ export default function TokenSale() {
           <div className="text-sm mb-4">
             = {formatNumber(amount * price)} {selectedToken}
           </div>
-          <div className="flex flex-col items-center">
-            <button
-              onClick={handleBuyClick}
-              className={`py-2 px-4 font-semibold rounded-lg transition-all ${
-                totAmount > 0 && !isProcessing
-                  ? "bg-[#8e2421] text-white hover:bg-[#8e25219d]"
-                  : "bg-gray-600 text-gray-400 cursor-not-allowed"
-              }`}
-              disabled={totAmount <= 0 || isProcessing}
-            >
-              {isProcessing
-                ? "Processing..."
-                : totAmount > 0
-                ? `Buy Tokens with ${selectedToken}`
-                : "Sold Out"}
-            </button>
-          </div>
           <button
-            className="font-semibold mt-4 py-2 px-4 rounded-lg transition-all bg-[#8e2421] text-white hover:bg-[#8e25219d]"
-            onClick={approveUSDT}
+            onClick={handleBuyClick}
+            className={`py-2 px-4 font-semibold rounded-lg transition-all ${
+              totAmount > 0 && !isProcessing
+                ? "bg-[#8e2421] text-white hover:bg-[#8e25219d]"
+                : "bg-gray-600 text-gray-400 cursor-not-allowed"
+            }`}
+            disabled={totAmount <= 0 || isProcessing}
           >
-            Approve USDT
+            {isProcessing
+              ? "Processing..."
+              : totAmount > 0
+              ? `Buy Tokens with ${selectedToken}`
+              : "Sold Out"}
           </button>
         </div>
         {isPopupOpen && (

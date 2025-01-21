@@ -53,6 +53,10 @@ export default function TokenSale() {
   const [isProcessing, setIsProcessing] = useState(false);
 
   const handleInputChange = (e) => {
+    if (e.target.value < 1) {
+      setAmount(Number(1));
+      return;
+    }
     setAmount(Number(e.target.value));
   };
 

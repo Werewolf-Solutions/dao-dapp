@@ -20,13 +20,21 @@ parent_folder/
 
 # TODO
 
-- [] write all the pages
+- [] write pages
 
-  - [] DAO proposals
+  - [] DAO
+
+    - [] create proposal
+
+    - [] vote proposal
 
   - [>] token sale
 
+    - [>] buyTokens
+
   - [] staking
+
+    - [] stake tokens
 
   - [] ...
 

@@ -5,7 +5,7 @@ import { encodeAbiParameters, parseUnits } from "viem";
 import { config } from "../config.ts";
 
 export default function DAO() {
-  const { account, daoABI, daoAddress, tokenSaleABI } = useChain();
+  const { account, daoABI, daoAddress, tokenSaleABI, wlfTokenABI } = useChain();
 
   const [proposals, setProposals] = useState([]); // List of proposals
   const [isPopupOpen, setIsPopupOpen] = useState(false); // Popup visibility
@@ -40,6 +40,20 @@ export default function DAO() {
     const dataArray = datas.split(",").map((d) => d.trim());
 
     try {
+      // Approve WLF token spending
+      const proposalCost = await readContract(config, {
+        abi: daoABI.abi,
+        address: daoABI.address,
+        functionName: "proposalCost",
+      });
+      console.log(proposalCost);
+      await writeContract(config, {
+        abi: wlfTokenABI.abi,
+        address: wlfTokenABI.address,
+        functionName: "approve",
+        args: [daoABI.address, proposalCost],
+      });
+
       await writeContract(config, {
         abi: daoABI.abi,
         address: daoABI.address,

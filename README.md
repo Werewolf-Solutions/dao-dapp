@@ -4,10 +4,6 @@
 
 `npm i`
 
-`npm start`
-
-# Import contracts addresses
-
 Make sure dao-dapp is in same parent folder of dao-project
 
 ```
@@ -16,7 +12,7 @@ parent_folder/
   dao-project
 ```
 
-`npm run import`
+`npm start`
 
 # TODO
 

@@ -18,6 +18,12 @@ parent_folder/
 
 - [] write pages
 
+  - [] companiesHouse
+
+    - [] create a company
+
+    - [] pay employees/collaborators
+
   - [] DAO
 
     - [] create proposal

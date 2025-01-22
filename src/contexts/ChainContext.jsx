@@ -8,6 +8,7 @@ import { werewolfToken_ABI } from "../contracts/werewolfToken_ABI.ts";
 import { tokenSale_ABI } from "../contracts/tokenSale_ABI.ts";
 import { dao_ABI } from "../contracts/dao_ABI.ts";
 import { staking_ABI } from "../contracts/staking_ABI.ts";
+import { companiesHouse_ABI } from "../contracts/companiesHouse_ABI.ts";
 
 import contractsAddresses from "../utils/contracts-addresses.json";
 
@@ -29,6 +30,8 @@ export const ChainProvider = ({ children }) => {
   const [tokenSaleABI, setTokenSaleABI] = useState(tokenSale_ABI);
   const [daoABI, setDaoABI] = useState(dao_ABI);
   const [stakingABI, setStakingABI] = useState(staking_ABI);
+  const [companiesHouseABI, setCompaniesHouseABI] =
+    useState(companiesHouse_ABI);
 
   const getETHBalance = async () => {
     const account_balance = await getBalance(config, {
@@ -122,12 +125,14 @@ export const ChainProvider = ({ children }) => {
     wlfTokenABI.address = addresses.WerewolfToken;
     daoABI.address = addresses.DAO;
     stakingABI.address = addresses.Staking;
+    companiesHouseABI.address = addresses.CompaniesHouse;
 
     setUsdtABI(usdtABI);
     setWlfTokenABI(wlfTokenABI);
     setTokenSaleABI(tokenSaleABI);
     setDaoABI(daoABI);
     setStakingABI(stakingABI);
+    setCompaniesHouseABI(companiesHouseABI);
   };
 
   const loadContracts = async () => {
@@ -154,6 +159,7 @@ export const ChainProvider = ({ children }) => {
     wlfTokenABI,
     daoABI,
     stakingABI,
+    companiesHouseABI,
   };
 
   return (

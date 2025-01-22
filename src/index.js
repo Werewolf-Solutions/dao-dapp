@@ -15,6 +15,7 @@ import { config } from "./config.ts";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Staking from "./pages/Staking.jsx";
+import BusinessManager from "./pages/BusinessManager.jsx";
 
 const queryClient = new QueryClient();
 
@@ -43,6 +44,10 @@ const router = createBrowserRouter([
       {
         path: "/staking",
         element: <Staking />,
+      },
+      {
+        path: "/business-manager",
+        element: <BusinessManager />,
       },
     ],
   },

@@ -1,20 +1,39 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useChain } from "../contexts/ChainContext";
-import { writeContract } from "@wagmi/core";
+import { writeContract, readContract } from "@wagmi/core";
+import { encodeAbiParameters, parseUnits } from "viem";
 import { config } from "../config.ts";
 
 export default function DAO() {
-  const { account, daoABI, daoAddress } = useChain();
+  const { account, daoABI, daoAddress, tokenSaleABI } = useChain();
 
   const [proposals, setProposals] = useState([]); // List of proposals
   const [isPopupOpen, setIsPopupOpen] = useState(false); // Popup visibility
-  const [newProposal, setNewProposal] = useState(""); // New proposal input
+  const [newProposalTitle, setNewProposalTitle] = useState(""); // New proposal input
   const [targets, setTargets] = useState(""); // Targets input
   const [signatures, setSignatures] = useState(""); // Signatures input
   const [datas, setDatas] = useState(""); // Data input
 
+  const testInputs = () => {
+    setNewProposalTitle("Proposal to start a token sale");
+    setTargets(`${tokenSaleABI.address}`);
+    setSignatures("startSale(uint256,uint256)");
+
+    const saleTokenAmount = parseUnits("10000", 18);
+    const saleTokenPrice = parseUnits("0.05", 18);
+    const saleProposalCallData = encodeAbiParameters(
+      [
+        { name: "_amount", type: "uint256" },
+        { name: "_price", type: "uint256" },
+      ],
+      [saleTokenAmount, saleTokenPrice]
+    );
+    setDatas(`${saleProposalCallData}`);
+  };
+
+  // createProposal(address[] memory _targets, string[] memory _signatures, bytes[] memory _datas)
   const handleCreateProposal = async () => {
-    if (!newProposal.trim() || !targets || !signatures || !datas) return;
+    if (!newProposalTitle.trim() || !targets || !signatures || !datas) return;
 
     const targetArray = targets.split(",").map((t) => t.trim());
     const signatureArray = signatures.split(",").map((s) => s.trim());
@@ -31,13 +50,13 @@ export default function DAO() {
       const newProposalId = proposals.length + 1; // Mocking a proposal ID
       const proposal = {
         id: newProposalId,
-        title: newProposal,
+        title: newProposalTitle,
         votesFor: 0,
         votesAgainst: 0,
       };
 
-      setProposals((prev) => [...prev, proposal]);
-      setNewProposal("");
+      await fetchProposals();
+      setNewProposalTitle("");
       setTargets("");
       setSignatures("");
       setDatas("");
@@ -52,7 +71,7 @@ export default function DAO() {
       const proof = []; // Placeholder for proof (adjust based on your contract's requirements)
       const voteAmount = 1; // Mocked vote amount, adjust based on your app logic
 
-      await writeContract({
+      await writeContract(config, {
         abi: daoABI,
         address: daoAddress,
         functionName: "vote",
@@ -77,13 +96,61 @@ export default function DAO() {
     }
   };
 
+  // Fetch proposals from the contract
+  const fetchProposals = async () => {
+    try {
+      const fetchedProposals = [];
+
+      const proposalCount = await readContract(config, {
+        abi: daoABI.abi,
+        address: daoABI.address,
+        functionName: "proposalCount",
+      });
+      console.log(proposalCount);
+
+      for (let i = 0; i < proposalCount; i++) {
+        const proposal = await readContract(config, {
+          abi: daoABI.abi,
+          address: daoABI.address,
+          functionName: "proposals",
+          args: [i],
+        });
+        console.log(proposal);
+
+        fetchedProposals.push({
+          id: i,
+          title: `Proposal #${i}`, // Replace with actual title if stored separately
+          votesFor: parseInt(proposal.votesFor),
+          votesAgainst: parseInt(proposal.votesAgainst),
+          proposer: proposal.proposer,
+          proposalState: proposal.proposalState,
+          startTime: new Date(proposal.startTime * 1000).toLocaleString(),
+          endTime: new Date(proposal.endTime * 1000).toLocaleString(),
+        });
+      }
+
+      console.log(fetchedProposals);
+
+      setProposals(fetchedProposals);
+    } catch (error) {
+      console.error("Error fetching proposals:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchProposals();
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col justify-center items-center bg-[#1a202c] text-[#fff] p-4">
       <div className="w-full max-w-md bg-gray-800 p-6 rounded-lg shadow-lg text-center">
         <h1 className="text-4xl font-bold mb-6">DAO Proposals</h1>
 
         <button
-          onClick={() => setIsPopupOpen(true)}
+          onClick={() => {
+            testInputs();
+            setIsPopupOpen(true);
+          }}
           className="px-6 py-3 bg-[#8e2421] text-white hover:bg-[#8e25219d] font-semibold rounded-lg shadow-lg transition-all mb-6"
         >
           Create Proposal
@@ -156,8 +223,8 @@ export default function DAO() {
               <input
                 type="text"
                 placeholder="Proposal title"
-                value={newProposal}
-                onChange={(e) => setNewProposal(e.target.value)}
+                value={newProposalTitle}
+                onChange={(e) => setNewProposalTitle(e.target.value)}
                 className="w-full p-3 rounded-lg text-black mb-4 outline-none"
               />
               <textarea

@@ -1,21 +1,25 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import ErrorPage from "./pages/ErrorPage";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { WagmiProvider } from "wagmi";
+
+import { ChainProvider } from "./contexts/ChainContext";
+
 import App from "./App";
+import ErrorPage from "./pages/ErrorPage";
 import Home from "./pages/Home";
-import "./index.css";
 import TokenSale from "./pages/TokenSale";
 import DAO from "./pages/DAO";
-import { ChainProvider } from "./contexts/ChainContext";
 import Account from "./pages/Account";
-
-import { WagmiProvider } from "wagmi";
-import { config } from "./config.ts";
-
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Staking from "./pages/Staking.jsx";
-import BusinessManager from "./pages/BusinessManager.jsx";
+import CompaniesHouse from "./pages/CompaniesHouse.jsx";
+
+import { config } from "./config.ts";
+import "./index.css";
+import Company from "./pages/Company.jsx";
+import HireEmployee from "./pages/HireEmployee.jsx";
+import FireEmployee from "./pages/FireEmployee.jsx";
 
 const queryClient = new QueryClient();
 
@@ -46,8 +50,20 @@ const router = createBrowserRouter([
         element: <Staking />,
       },
       {
-        path: "/business-manager",
-        element: <BusinessManager />,
+        path: "/companies",
+        element: <CompaniesHouse />,
+      },
+      {
+        path: "/companies/:companyId",
+        element: <Company />,
+      },
+      {
+        path: "/companies/:companyId/hire-employee",
+        element: <HireEmployee />,
+      },
+      {
+        path: "/companies/:companyId/fire-employee/:employeeId",
+        element: <FireEmployee />,
       },
     ],
   },

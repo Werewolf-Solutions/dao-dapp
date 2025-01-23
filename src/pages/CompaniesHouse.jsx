@@ -13,9 +13,9 @@ export default function CompaniesHouse() {
   const [isProcessing, setIsProcessing] = useState(false);
 
   const [companyParams, setCompanyParams] = useState({
-    name: "test",
-    industry: "test",
-    domain: "test.com",
+    name: "Werewolf Solutions",
+    industry: "Software Development",
+    domain: "https://werewolf.solutions/",
     roles: ["CEO", "CTO", "dev"],
     powerRoles: ["CEO", "CTO"],
     owner: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
@@ -34,13 +34,15 @@ export default function CompaniesHouse() {
         {
           companyId: 1,
           owner: account.address,
-          industry: "Industry",
-          name: "Name",
+          industry: "Software Development",
+          name: "Werewolf Solutions",
           createdAt: Date.now(),
           active: true,
-          domain: "domain.com",
+          domain: "https://werewolf.solutions/",
           currency: "USD",
-          roles: ["CEO", "CTO"],
+          powerRoles: ["CEO", "CTO"],
+          owner: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+          currency: "USD",
         },
       ];
       setCompanies(result);

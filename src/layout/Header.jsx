@@ -1,31 +1,46 @@
 import React, { useState, useEffect } from "react";
 import { useAccount, useConnect, useDisconnect } from "wagmi";
 import { Link } from "react-router-dom";
-import { useChain } from "../contexts/ChainContext";
 
 export default function Header() {
   const account = useAccount();
   const { connectors, connect, status, error } = useConnect();
   const { disconnect } = useDisconnect();
   const [nav, setNav] = useState(false);
-  const [isPopupOpen, setIsPopupOpen] = useState(false); // State to manage popup visibility
+  const [isPopupOpen, setIsPopupOpen] = useState(false); // State for the connect popup
+  const [isHoverPopupOpen, setIsHoverPopupOpen] = useState(false); // State for hover popup
+  const [hoverTimeout, setHoverTimeout] = useState(null); // Timeout for delayed hiding
 
   const handleNav = () => {
     setNav(!nav);
   };
 
   const handleConnectButtonClick = () => {
-    setIsPopupOpen(true); // Open the popup when the button is clicked
+    setIsPopupOpen(true); // Open the connect popup
   };
 
   const handlePopupClose = () => {
-    setIsPopupOpen(false); // Close the popup
+    setIsPopupOpen(false); // Close the connect popup
+  };
+
+  const handleHoverPopupClose = () => {
+    setHoverTimeout(
+      setTimeout(() => {
+        setIsHoverPopupOpen(false);
+      }, 200) // Small delay to allow smoother transitions
+    );
+  };
+
+  const handleHoverPopupOpen = () => {
+    if (hoverTimeout) {
+      clearTimeout(hoverTimeout); // Cancel the timeout to prevent premature hiding
+    }
+    setIsHoverPopupOpen(true);
   };
 
   useEffect(() => {
-    // console.log("status changed: " + status);
     if (status === "success") {
-      setIsPopupOpen(false);
+      setIsPopupOpen(false); // Close the wallet connection popup
     }
   }, [status]);
 
@@ -50,13 +65,42 @@ export default function Header() {
         <li className="p-4">
           <Link to="/companies">Companies House</Link>
         </li>
-        <li className="p-4">
-          <button
-            className="bg-[#8e2421] text-white hover:bg-[#8e25219d] p-2 rounded-lg"
-            onClick={handleConnectButtonClick} // Show popup when clicked
-          >
-            Connect Wallet
-          </button>
+        <li className="p-4 relative">
+          {account.status === "connected" ? (
+            <div
+              className="inline-block relative"
+              onMouseEnter={handleHoverPopupOpen} // Show hover popup
+              onMouseLeave={handleHoverPopupClose} // Start hiding popup
+            >
+              <button className="bg-[#8e2421] text-white hover:bg-[#8e25219d] p-2 rounded-lg">
+                {`${account.address.slice(0, 3)}...${account.address.slice(
+                  -3
+                )}`}
+              </button>
+              {isHoverPopupOpen && (
+                <div
+                  className="absolute top-full mt-2 right-0 bg-gray-800 p-4 rounded-lg shadow-lg"
+                  onMouseEnter={handleHoverPopupOpen} // Keep popup open when hovered
+                  onMouseLeave={handleHoverPopupClose} // Allow closing after leaving popup
+                >
+                  <button
+                    onClick={disconnect} // Disconnect wallet
+                    className="bg-[#8e2421] text-white hover:bg-[#8e25219d] p-2 rounded-lg"
+                  >
+                    Disconnect
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <button
+              className="bg-[#8e2421] text-white hover:bg-[#8e25219d] p-2 rounded-lg"
+              onClick={handleConnectButtonClick} // Show connect popup
+              onMouseLeave={handleHoverPopupClose}
+            >
+              Connect Wallet
+            </button>
+          )}
         </li>
       </ul>
 
@@ -64,7 +108,7 @@ export default function Header() {
       {isPopupOpen && (
         <div
           className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50"
-          onClick={handlePopupClose} // Close the popup when clicking outside
+          onClick={handlePopupClose} // Close connect popup when clicking outside
         >
           <div
             className="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-lg"
@@ -72,7 +116,7 @@ export default function Header() {
           >
             <h2 className="text-2xl font-bold mb-4">Connect Your Wallet</h2>
             <div className="space-y-4">
-              {/* Map through connectors and display buttons for each one */}
+              {/* Map through connectors and display buttons for each */}
               {connectors.map((connector) => (
                 <button
                   key={connector.uid}

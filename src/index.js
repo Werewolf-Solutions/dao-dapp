@@ -62,7 +62,7 @@ const router = createBrowserRouter([
         element: <HireEmployee />,
       },
       {
-        path: "/companies/:companyId/fire-employee/:employeeId",
+        path: "/companies/:companyId/fire-employee/:employeeAddress",
         element: <FireEmployee />,
       },
     ],

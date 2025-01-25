@@ -9,7 +9,7 @@ export default function Company() {
   const navigate = useNavigate();
   const [employees, setEmployees] = useState([]);
   const [status, setStatus] = useState("");
-  const [company, setCompany] = useState([]);
+  const [company, setCompany] = useState();
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [newRole, setNewRole] = useState("");
 
@@ -95,7 +95,7 @@ export default function Company() {
         >
           Back
         </button>
-        <h1 className="text-4xl font-bold mb-6">Business: {company.name}</h1>
+        <h1 className="text-4xl font-bold mb-6">Business: {company?.name}</h1>
 
         <h2 className="text-2xl font-bold mb-4">Employees</h2>
         <button
@@ -123,7 +123,7 @@ export default function Company() {
                     Manage Role
                   </button>
                   <a
-                    href={`/companies/${companyId}/fire-employee/${employee.id}`}
+                    href={`/companies/${companyId}/fire-employee/${employee.address}`}
                     className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-700"
                   >
                     Fire

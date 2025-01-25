@@ -221,7 +221,6 @@ export const dao_ABI = {
         { name: "_proposalId", type: "uint256", internalType: "uint256" },
         { name: "_voteAmount", type: "uint256", internalType: "uint256" },
         { name: "_support", type: "bool", internalType: "bool" },
-        { name: "_proof", type: "bytes32[]", internalType: "bytes32[]" },
       ],
       outputs: [],
       stateMutability: "nonpayable",

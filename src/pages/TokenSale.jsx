@@ -26,19 +26,28 @@ export default function TokenSale() {
       address: "0xUSDCAddress",
       abi: usdtABI.abi,
       decimals: 6,
+      basePriceUSD: 1, // Base price in USD
     },
     USDT: {
       name: "USDT",
       address: usdtABI.address,
       abi: usdtABI.abi,
       decimals: 6,
+      basePriceUSD: 1, // Base price in USD
     },
-    ETH: { name: "ETH", address: null, abi: null, decimals: 18 },
+    ETH: {
+      name: "ETH",
+      address: null,
+      abi: null,
+      decimals: 18,
+      basePriceUSD: 3200, // Base price in USD
+    },
     WBTC: {
       name: "WBTC",
       address: "0xWBTCAddress",
       abi: usdtABI.abi,
       decimals: 8,
+      basePriceUSD: 100000, // Base price in USD
     },
   };
 
@@ -51,25 +60,35 @@ export default function TokenSale() {
   const [message, setMessage] = useState("");
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [wlfPrice, setWlfPrice] = useState(
+    tokenPrice / tokenOptions["USDT"].basePriceUSD
+  ); // Initial WLF price in USDT
+  const [totalCost, setTotalCost] = useState(amount * wlfPrice);
 
-  const handleInputChange = (e) => {
-    if (e.target.value < 1) {
-      setAmount(Number(1));
-      return;
-    }
-    setAmount(Number(e.target.value));
+  const handleAmountChange = (e) => {
+    let newAmount = e.target.value.replace(/^0+(?=\d)/, ""); // Remove leading zeros
+    newAmount = Number(newAmount);
+
+    if (newAmount <= 0) newAmount = wlfPrice; // Ensure amount is not negative or equal to 0
+
+    setAmount(newAmount);
+    setTotalCost(newAmount * wlfPrice); // Recalculate total cost
   };
 
   const handleTokenChange = (e) => {
-    setSelectedToken(e.target.value);
+    const newToken = e.target.value;
+    const basePriceUSD = tokenOptions[newToken].basePriceUSD;
+
+    // Update WLF price and total cost based on new token
+    const newWlfPrice = tokenPrice / basePriceUSD;
+    setSelectedToken(newToken);
+    setWlfPrice(newWlfPrice);
+    setTotalCost(amount * newWlfPrice);
   };
 
   const handleBuyClick = async () => {
     const token = tokenOptions[selectedToken];
-    const totalCost = amount * price;
-    // const totalCostInUnits = totalCost * 10 ** token.decimals;
     const totalCostInUnits = parseUnits(totalCost.toString(), token.decimals);
-    console.log(totalCostInUnits);
 
     if (totAmount <= 0) {
       setMessage("Tokens are sold out!");
@@ -159,7 +178,7 @@ export default function TokenSale() {
       setIsPopupOpen(true);
     }
 
-    setAmount(0); // Reset input
+    setTotalCost(price); // Reset cost input to default value
   };
 
   const handleClosePopup = () => {
@@ -172,9 +191,15 @@ export default function TokenSale() {
         <h2 className="text-2xl font-bold mb-4">Welcome to the Token Sale</h2>
         <div className="text-left space-y-2">
           <p>
-            Price:{" "}
+            WLF Price:
             <span className="font-semibold">
-              {formatNumber(price)} {selectedToken}
+              {wlfPrice.toFixed(8)} {selectedToken}
+            </span>
+          </p>
+          <p>
+            Total Cost:
+            <span className="font-semibold">
+              {totalCost.toFixed(8)} {selectedToken}
             </span>
           </p>
           <p>
@@ -202,14 +227,14 @@ export default function TokenSale() {
           </select>
           <input
             type="number"
-            placeholder="Enter amount"
+            placeholder="Enter total cost"
             value={amount}
-            onChange={handleInputChange}
+            onChange={handleAmountChange}
             className="w-full p-2 rounded-lg text-black outline-none mb-2"
             disabled={totAmount <= 0 || isProcessing}
           />
           <div className="text-sm mb-4">
-            = {formatNumber(amount * price)} {selectedToken}
+            Tokens to Receive: {formatNumber(amount)} WLF
           </div>
           <button
             onClick={handleBuyClick}
@@ -223,23 +248,20 @@ export default function TokenSale() {
             {isProcessing
               ? "Processing..."
               : totAmount > 0
-              ? `Buy Tokens with ${selectedToken}`
+              ? `Buy ${amount} WLF Tokens with ${selectedToken}`
               : "Sold Out"}
           </button>
         </div>
         {isPopupOpen && (
           <div
-            className="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50"
+            className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-75"
             onClick={handleClosePopup}
           >
-            <div
-              className="bg-gray-800 p-4 rounded-lg text-white shadow-lg"
-              onClick={(e) => e.stopPropagation()}
-            >
+            <div className="bg-white text-black p-6 rounded-lg shadow-lg">
               <p>{message}</p>
               <button
-                className="mt-4 bg-red-600 px-4 py-2 rounded-lg hover:bg-red-500 transition-all"
                 onClick={handleClosePopup}
+                className="mt-4 py-1 px-2 rounded-lg bg-blue-600 text-white"
               >
                 Close
               </button>

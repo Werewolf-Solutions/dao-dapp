@@ -4,7 +4,7 @@
 
 `npm i`
 
-Make sure dao-dapp is in same parent folder of dao-project
+Make sure dao-dapp is in same parent folder of dao-project and you deployed smart contracts, in dao-project/ run `make deploy-local`
 
 ```
 parent_folder/
@@ -18,26 +18,8 @@ parent_folder/
 
 - [] write pages
 
-  - [] companiesHouse
-
-    - [] create a company
-
-    - [] pay employees/collaborators
-
-  - [] DAO
-
-    - [] create proposal
-
-    - [] vote proposal
-
-  - [>] token sale
-
-    - [>] buyTokens
-
   - [] staking
 
     - [] stake tokens
 
   - [] ...
-
-- [] re-write errorPage

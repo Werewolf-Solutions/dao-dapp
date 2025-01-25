@@ -1,7 +1,6 @@
 export const companiesHouse_ABI = {
   address: "0x",
   abi: [
-    { type: "constructor", inputs: [], stateMutability: "nonpayable" },
     {
       type: "function",
       name: "DEFAULT_ADMIN_ROLE",
@@ -40,9 +39,10 @@ export const companiesHouse_ABI = {
             { name: "domain", type: "string", internalType: "string" },
             { name: "roles", type: "string[]", internalType: "string[]" },
             { name: "powerRoles", type: "string[]", internalType: "string[]" },
-            { name: "ownerName", type: "string", internalType: "string" },
+            { name: "owner", type: "address", internalType: "address" },
+            { name: "currency", type: "string", internalType: "string" },
             { name: "ownerSalary", type: "uint256", internalType: "uint256" },
-            { name: "ownerCurrency", type: "string", internalType: "string" },
+            { name: "ownerName", type: "string", internalType: "string" },
           ],
         },
       ],
@@ -186,6 +186,7 @@ export const companiesHouse_ABI = {
         { name: "createdAt", type: "uint256", internalType: "uint256" },
         { name: "active", type: "bool", internalType: "bool" },
         { name: "domain", type: "string", internalType: "string" },
+        { name: "currency", type: "string", internalType: "string" },
       ],
       stateMutability: "view",
     },
@@ -261,6 +262,7 @@ export const companiesHouse_ABI = {
             { name: "domain", type: "string", internalType: "string" },
             { name: "roles", type: "string[]", internalType: "string[]" },
             { name: "powerRoles", type: "string[]", internalType: "string[]" },
+            { name: "currency", type: "string", internalType: "string" },
           ],
         },
       ],
@@ -339,8 +341,50 @@ export const companiesHouse_ABI = {
       type: "function",
       name: "treasury",
       inputs: [],
-      outputs: [{ name: "", type: "address", internalType: "address" }],
+      outputs: [
+        { name: "", type: "address", internalType: "contract Treasury" },
+      ],
       stateMutability: "view",
+    },
+    {
+      type: "function",
+      name: "updateCurrency",
+      inputs: [
+        { name: "_companyId", type: "uint96", internalType: "uint96" },
+        { name: "_currency", type: "string", internalType: "string" },
+      ],
+      outputs: [],
+      stateMutability: "nonpayable",
+    },
+    {
+      type: "function",
+      name: "updateEmployeeSalary",
+      inputs: [
+        { name: "_companyId", type: "uint96", internalType: "uint96" },
+        { name: "_employeeAddress", type: "address", internalType: "address" },
+        { name: "_newSalary", type: "uint256", internalType: "uint256" },
+      ],
+      outputs: [],
+      stateMutability: "nonpayable",
+    },
+    {
+      type: "function",
+      name: "updateOwnerSalary",
+      inputs: [
+        { name: "_companyId", type: "uint96", internalType: "uint96" },
+        { name: "_ownerSalary", type: "uint256", internalType: "uint256" },
+      ],
+      outputs: [],
+      stateMutability: "nonpayable",
+    },
+    {
+      type: "function",
+      name: "updateTreasury",
+      inputs: [
+        { name: "_newTreasury", type: "address", internalType: "address" },
+      ],
+      outputs: [],
+      stateMutability: "nonpayable",
     },
   ],
 };

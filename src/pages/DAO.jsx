@@ -62,14 +62,17 @@ export default function DAO() {
       });
 
       const newProposalId = proposals.length + 1; // Mocking a proposal ID
-      const proposal = {
-        id: newProposalId,
-        title: newProposalTitle,
-        votesFor: 0,
-        votesAgainst: 0,
-      };
+      const mockProposals = [
+        {
+          id: newProposalId,
+          title: newProposalTitle,
+          votesFor: 0,
+          votesAgainst: 0,
+        },
+      ];
 
-      await fetchProposals();
+      // await fetchProposals();
+      setProposals(mockProposals);
       setNewProposalTitle("");
       setTargets("");
       setSignatures("");
@@ -82,14 +85,13 @@ export default function DAO() {
 
   const handleVote = async (id, support) => {
     try {
-      const proof = []; // Placeholder for proof (adjust based on your contract's requirements)
       const voteAmount = 1; // Mocked vote amount, adjust based on your app logic
 
       await writeContract(config, {
-        abi: daoABI,
-        address: daoAddress,
+        abi: daoABI.abi,
+        address: daoABI.address,
         functionName: "vote",
-        args: [id, voteAmount, support, proof],
+        args: [id, voteAmount, support],
       });
 
       setProposals((prev) =>

@@ -46,7 +46,7 @@ export default function CreateCompanyForm({
       ></textarea>
       <input
         type="text"
-        placeholder="Owner Name"
+        placeholder="Owner Address"
         value={companyParams.owner}
         onChange={handleInputChange("owner")}
         className="w-full p-2 mb-2 rounded bg-gray-700 text-white"
@@ -56,6 +56,20 @@ export default function CreateCompanyForm({
         placeholder="Owner Currency"
         value={companyParams.currency}
         onChange={handleInputChange("currency")}
+        className="w-full p-2 mb-2 rounded bg-gray-700 text-white"
+      />
+      <input
+        type="number"
+        placeholder="Owner Salary"
+        value={companyParams.ownerSalary}
+        onChange={handleInputChange("ownerSalary")}
+        className="w-full p-2 mb-2 rounded bg-gray-700 text-white"
+      />
+      <input
+        type="text"
+        placeholder="Owner Name"
+        value={companyParams.ownerName}
+        onChange={handleInputChange("ownerName")}
         className="w-full p-2 mb-2 rounded bg-gray-700 text-white"
       />
       <button

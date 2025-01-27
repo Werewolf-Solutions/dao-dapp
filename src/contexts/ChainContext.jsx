@@ -21,6 +21,7 @@ export const ChainProvider = ({ children }) => {
   const [ETHBalance, setETHBalance] = useState(0);
   const [USDTBalance, setUSDTBalance] = useState(0);
   const [tokenBalance, setTokenBalance] = useState(0);
+  const [treasuryBalance, setTreasuryBalance] = useState(0);
   const [tokenTotSupply, setTokenTotSupply] = useState(0);
   const [amountInTokenSale, setAmountInTokenSale] = useState(0);
   const [tokenPrice, setTokenPrice] = useState(0);
@@ -39,6 +40,29 @@ export const ChainProvider = ({ children }) => {
       chainId: account.chainId,
     });
     setETHBalance(account_balance);
+  };
+
+  const getTreasuryBalance = async () => {
+    const chainId = account.chainId;
+    const addresses = contractsAddresses[chainId];
+
+    const decimals = await readContract(config, {
+      abi: wlfTokenABI.abi,
+      address: wlfTokenABI.address,
+      functionName: "decimals",
+    });
+
+    const rawBalance = await readContract(config, {
+      abi: wlfTokenABI.abi,
+      address: wlfTokenABI.address,
+      functionName: "balanceOf",
+      args: [addresses.Treasury],
+    });
+
+    const readableBalance = convertToReadableInput(rawBalance, decimals);
+    console.log(readableBalance);
+
+    setTreasuryBalance(readableBalance);
   };
 
   const getAmountInTokenSale = async () => {
@@ -138,6 +162,7 @@ export const ChainProvider = ({ children }) => {
   const loadContracts = async () => {
     try {
       importContractsAddresses();
+      await getTreasuryBalance();
       await getETHBalance();
       await getTokenBalance();
       await getTokenTotalSupply();
@@ -160,6 +185,7 @@ export const ChainProvider = ({ children }) => {
     daoABI,
     stakingABI,
     companiesHouseABI,
+    treasuryBalance,
   };
 
   return (

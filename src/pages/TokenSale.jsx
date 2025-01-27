@@ -5,7 +5,37 @@ import { parseUnits } from "viem";
 import { config } from "../config.ts";
 
 function formatNumber(num) {
-  return new Intl.NumberFormat().format(num);
+  // Convert to string in fixed-point notation with high precision
+  const numberString = num.toFixed(20); // Arbitrary high precision
+
+  // Extract the fractional part after the decimal point
+  const fractionalPart = numberString.split(".")[1];
+
+  // Count the number of zeros after "0."
+  const zeroCount = fractionalPart.match(/^0*/)[0].length;
+
+  // Calculate the appropriate precision (zero count + additional precision)
+  const precision = zeroCount + 6;
+
+  // Format the number with the desired precision and remove trailing zeros
+  let formattedNumber = num.toFixed(precision);
+
+  if (zeroCount === 20 || zeroCount === 0)
+    formattedNumber = Number(formattedNumber).toFixed(3);
+
+  // If it's a decimal number, remove trailing zeros in the fractional part
+  // if (formattedNumber.includes(".")) {
+  formattedNumber = formattedNumber.replace(/(\.\d*?[1-9])0+$/, "$1"); // Remove trailing zeros
+  formattedNumber = formattedNumber.replace(/\.$/, ""); // Remove the trailing decimal point if no digits remain
+  // }
+
+  if (formattedNumber == 0) formattedNumber = 0;
+
+  console.log(`Number: ${num}`);
+  console.log(`Zeros after "0.": ${zeroCount}`);
+  console.log(`Formatted Number: ${formattedNumber}`);
+
+  return formattedNumber;
 }
 
 export default function TokenSale() {
@@ -66,13 +96,19 @@ export default function TokenSale() {
   const [totalCost, setTotalCost] = useState(amount * wlfPrice);
 
   const handleAmountChange = (e) => {
-    let newAmount = e.target.value.replace(/^0+(?=\d)/, ""); // Remove leading zeros
+    let newAmount = e.target.value;
     newAmount = Number(newAmount);
 
-    if (newAmount <= 0) newAmount = wlfPrice; // Ensure amount is not negative or equal to 0
+    if (newAmount <= 0) newAmount = ""; // Ensure amount is not negative or equal to 0
 
     setAmount(newAmount);
-    setTotalCost(newAmount * wlfPrice); // Recalculate total cost
+    let new_price =
+      newAmount * (tokenPrice / tokenOptions[selectedToken].basePriceUSD);
+    // console.log(new_price.toFixed(10));
+    // console.log(newAmount, wlfPrice.toFixed(10));
+    // console.log(newAmount * wlfPrice);
+    let cost = formatNumber(new_price);
+    setTotalCost(cost); // Recalculate total cost
   };
 
   const handleTokenChange = (e) => {
@@ -193,13 +229,13 @@ export default function TokenSale() {
           <p>
             WLF Price:
             <span className="font-semibold">
-              {wlfPrice.toFixed(8)} {selectedToken}
+              {formatNumber(wlfPrice)} {selectedToken}
             </span>
           </p>
           <p>
             Total Cost:
             <span className="font-semibold">
-              {totalCost.toFixed(8)} {selectedToken}
+              {totalCost} {selectedToken}
             </span>
           </p>
           <p>
@@ -214,6 +250,16 @@ export default function TokenSale() {
           </p>
         </div>
         <div className="mt-6">
+          <span>Amount of tokens you want to buy: </span>
+          <input
+            type="number"
+            placeholder="Enter Amount"
+            value={amount}
+            onChange={handleAmountChange}
+            className="w-full p-2 rounded-lg text-black outline-none mb-2"
+            disabled={totAmount <= 0 || isProcessing}
+          />
+          Select token to buy with
           <select
             value={selectedToken}
             onChange={handleTokenChange}
@@ -225,16 +271,8 @@ export default function TokenSale() {
               </option>
             ))}
           </select>
-          <input
-            type="number"
-            placeholder="Enter total cost"
-            value={amount}
-            onChange={handleAmountChange}
-            className="w-full p-2 rounded-lg text-black outline-none mb-2"
-            disabled={totAmount <= 0 || isProcessing}
-          />
           <div className="text-sm mb-4">
-            Tokens to Receive: {formatNumber(amount)} WLF
+            = {totalCost} {selectedToken}
           </div>
           <button
             onClick={handleBuyClick}

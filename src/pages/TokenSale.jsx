@@ -31,9 +31,9 @@ function formatNumber(num) {
 
   if (formattedNumber == 0) formattedNumber = 0;
 
-  console.log(`Number: ${num}`);
-  console.log(`Zeros after "0.": ${zeroCount}`);
-  console.log(`Formatted Number: ${formattedNumber}`);
+  // console.log(`Number: ${num}`);
+  // console.log(`Zeros after "0.": ${zeroCount}`);
+  // console.log(`Formatted Number: ${formattedNumber}`);
 
   return formattedNumber;
 }

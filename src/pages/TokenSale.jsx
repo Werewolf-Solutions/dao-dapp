@@ -3,6 +3,7 @@ import { useChain } from "../contexts/ChainContext";
 import { writeContract, readContract } from "@wagmi/core";
 import { parseUnits } from "viem";
 import { config } from "../config.ts";
+import { Link } from "react-router-dom";
 
 function formatNumber(num) {
   // Convert to string in fixed-point notation with high precision
@@ -205,7 +206,21 @@ export default function TokenSale() {
       // Update balances after successful transaction
       setBalance((prev) => prev + amount);
       setTotAmount((prev) => prev - amount);
-      setMessage("Purchase successful!");
+      setMessage(
+        <div className="flex flex-col items-center">
+          <div className="font-bold text-xl">Purchase successful!</div>
+          <div className="mt-4 mb-4">
+            Go to{" "}
+            <Link
+              className="text-[#8e2421] hover:text-[#8e25219d]"
+              to="/staking"
+            >
+              Staking page
+            </Link>{" "}
+            to see your staked position.
+          </div>
+        </div>
+      );
     } catch (error) {
       console.error("Error during purchase:", error);
       setMessage("Transaction failed. Please try again.");

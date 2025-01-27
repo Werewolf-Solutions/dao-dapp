@@ -5,7 +5,14 @@ import { encodeAbiParameters, parseUnits } from "viem";
 import { config } from "../config.ts";
 
 export default function DAO() {
-  const { account, daoABI, daoAddress, tokenSaleABI, wlfTokenABI } = useChain();
+  const {
+    account,
+    daoABI,
+    daoAddress,
+    tokenSaleABI,
+    wlfTokenABI,
+    getTreasuryBalance,
+  } = useChain();
 
   const [proposals, setProposals] = useState([]); // List of proposals
   const [isPopupOpen, setIsPopupOpen] = useState(false); // Popup visibility
@@ -71,8 +78,11 @@ export default function DAO() {
         },
       ];
 
-      // await fetchProposals();
-      setProposals(mockProposals);
+      getTreasuryBalance();
+      // setProposals(mockProposals);
+
+      await fetchProposals();
+
       setNewProposalTitle("");
       setTargets("");
       setSignatures("");

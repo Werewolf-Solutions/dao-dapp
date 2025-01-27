@@ -189,7 +189,9 @@ export const ChainProvider = ({ children }) => {
   };
 
   return (
-    <ChainContext.Provider value={{ ...contextValue, loadContracts }}>
+    <ChainContext.Provider
+      value={{ ...contextValue, loadContracts, getTreasuryBalance }}
+    >
       {children}
     </ChainContext.Provider>
   );

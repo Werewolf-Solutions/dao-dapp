@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useChain } from "../contexts/ChainContext";
-import { writeContract, readContract } from "@wagmi/core";
+import { writeContract, readContract, watchContractEvent } from "@wagmi/core";
 import { parseUnits } from "viem";
 import { config } from "../config.ts";
 import { Link } from "react-router-dom";
@@ -154,6 +154,14 @@ export default function TokenSale() {
     try {
       setIsProcessing(true);
 
+      const unwatch = watchContractEvent(config, {
+        abi: tokenSaleABI.abi,
+        eventName: "TokensPurchased",
+        onLogs(logs) {
+          console.log("Logs changed!", logs);
+        },
+      });
+
       // Approve token if required (for non-ETH tokens)
       if (selectedToken !== "ETH") {
         const balance = await readContract(config, {
@@ -202,6 +210,7 @@ export default function TokenSale() {
           0, // amount1Desired
         ],
       });
+      unwatch();
 
       // Update balances after successful transaction
       setBalance((prev) => prev + amount);
@@ -311,7 +320,7 @@ export default function TokenSale() {
             onClick={handleClosePopup}
           >
             <div className="bg-white text-black p-6 rounded-lg shadow-lg">
-              <p>{message}</p>
+              {message}
               <button
                 onClick={handleClosePopup}
                 className="mt-4 py-1 px-2 rounded-lg bg-blue-600 text-white"

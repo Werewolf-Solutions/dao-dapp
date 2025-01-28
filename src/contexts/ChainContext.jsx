@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState } from "react";
 import { useAccount } from "wagmi";
 import { getBalance, readContract } from "@wagmi/core";
+import { formatUnits } from "viem";
 import { config } from "../config.ts";
 
 import { mockUSDT_ABI } from "../contracts/mockUSDT_ABI.ts";
@@ -25,6 +26,10 @@ export const ChainProvider = ({ children }) => {
   const [tokenTotSupply, setTokenTotSupply] = useState(0);
   const [amountInTokenSale, setAmountInTokenSale] = useState(0);
   const [tokenPrice, setTokenPrice] = useState(0);
+  const [proposalCost, setProposalCost] = useState(0);
+  const [wlfDecimals, setWlfDecimals] = useState(0);
+
+  const [proposals, setProposals] = useState([]); // List of proposals
 
   const [wlfTokenABI, setWlfTokenABI] = useState(werewolfToken_ABI);
   const [usdtABI, setUsdtABI] = useState(mockUSDT_ABI);
@@ -51,6 +56,8 @@ export const ChainProvider = ({ children }) => {
       address: wlfTokenABI.address,
       functionName: "decimals",
     });
+
+    setWlfDecimals(decimals);
 
     const rawBalance = await readContract(config, {
       abi: wlfTokenABI.abi,
@@ -140,6 +147,64 @@ export const ChainProvider = ({ children }) => {
     getTokenPrice();
   };
 
+  const getProposalCost = async () => {
+    const rawBalance = await readContract(config, {
+      abi: daoABI.abi,
+      address: daoABI.address,
+      functionName: "proposalCost",
+    });
+    const decimals = await readContract(config, {
+      abi: wlfTokenABI.abi,
+      address: wlfTokenABI.address,
+      functionName: "decimals",
+    });
+
+    const readableBalance = convertToReadableInput(rawBalance, decimals);
+    setProposalCost(rawBalance);
+  };
+
+  // Fetch proposals from the contract
+  const fetchProposals = async () => {
+    try {
+      const fetchedProposals = [];
+
+      const proposalCount = await readContract(config, {
+        abi: daoABI.abi,
+        address: daoABI.address,
+        functionName: "proposalCount",
+      });
+      console.log(proposalCount);
+
+      for (let i = 1; i < proposalCount; i++) {
+        const proposal = await readContract(config, {
+          abi: daoABI.abi,
+          address: daoABI.address,
+          functionName: "proposals",
+          args: [i],
+        });
+        console.log(proposal);
+
+        fetchedProposals.push({
+          id: Number(i), // Convert to a number if `i` is not already
+          title: `Proposal #${i}`, // Replace with the actual title if available
+          votesFor: Number(proposal[2]), // Convert BigInt to a number
+          votesAgainst: Number(proposal[3]), // Convert BigInt to a number
+          proposer: proposal[1], // Address remains as a string
+          // proposalState: proposal.proposalState, // Assuming this is already a readable value
+          startTime: new Date(Number(proposal[4]) * 1000).toLocaleString(), // Convert BigInt and transform to readable date
+          endTime: new Date(Number(proposal[5]) * 1000).toLocaleString(), // Convert BigInt and transform to readable date
+          eta: Number(proposal[6]), // Convert BigInt to a number
+        });
+      }
+
+      console.log(fetchedProposals);
+
+      setProposals(fetchedProposals);
+    } catch (error) {
+      console.error("Error fetching proposals:", error);
+    }
+  };
+
   const importContractsAddresses = () => {
     const chainId = account.chainId;
     const addresses = contractsAddresses[chainId];
@@ -167,6 +232,8 @@ export const ChainProvider = ({ children }) => {
       await getTokenBalance();
       await getTokenTotalSupply();
       await loadTokenSaleContract();
+      await getProposalCost();
+      await fetchProposals();
     } catch (error) {
       console.error(error);
     }
@@ -186,11 +253,21 @@ export const ChainProvider = ({ children }) => {
     stakingABI,
     companiesHouseABI,
     treasuryBalance,
+    proposalCost,
+    proposals,
+    wlfDecimals,
   };
 
   return (
     <ChainContext.Provider
-      value={{ ...contextValue, loadContracts, getTreasuryBalance }}
+      value={{
+        ...contextValue,
+        loadContracts,
+        getTreasuryBalance,
+        getProposalCost,
+        fetchProposals,
+        convertToReadableInput,
+      }}
     >
       {children}
     </ChainContext.Provider>

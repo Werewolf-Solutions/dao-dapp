@@ -14,7 +14,7 @@ export default function Footer() {
             <i className="fab fa-discord"></i> Discord
           </a>
           <a
-            href="https://github.com/Werewolf-Solutions/dao-project-foundry"
+            href="https://github.com/Werewolf-Solutions/dao-dapp"
             target="_blank"
             rel="noopener noreferrer"
             className="text-accent hover:text-blue-500 transition-all"

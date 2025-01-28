@@ -19,7 +19,7 @@ export default function Account() {
           </p>
         </div>
 
-        <main className="flex flex-col items-center gap-4 mt-8">
+        <div className="flex flex-col items-center gap-4 mt-8">
           {/* Account Info */}
           <div className="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-lg">
             <h2 className="text-2xl font-bold mb-4">Account Information</h2>
@@ -28,8 +28,10 @@ export default function Account() {
                 <span className="font-semibold">Status: </span> {account.status}
               </p>
               <p>
-                <span className="font-semibold">Addresses: </span>
-                {JSON.stringify(account.addresses)}
+                <span className="font-semibold">Address: </span>
+                {`${account.address.slice(0, 3)}...${account.address.slice(
+                  -3
+                )}`}
               </p>
               <p>
                 <span className="font-semibold">Chain ID: </span>
@@ -56,26 +58,28 @@ export default function Account() {
           </div>
 
           {/* Connect Section */}
-          <div className="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-lg mt-6">
-            <h2 className="text-2xl font-bold mb-4">Connect Your Wallet</h2>
-            <div className="space-y-4">
-              {connectors.map((connector) => (
-                <button
-                  key={connector.uid}
-                  onClick={() => connect({ connector })}
-                  type="button"
-                  className="w-full px-6 py-3 bg-blue-600 text-white hover:bg-blue-500 font-semibold rounded-lg shadow-lg transition-all"
-                >
-                  {connector.name}
-                </button>
-              ))}
+          {account.status != "connected" && (
+            <div className="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-lg mt-6">
+              <h2 className="text-2xl font-bold mb-4">Connect Your Wallet</h2>
+              <div className="space-y-4">
+                {connectors.map((connector) => (
+                  <button
+                    key={connector.uid}
+                    onClick={() => connect({ connector })}
+                    type="button"
+                    className="w-full px-6 py-3 bg-blue-600 text-white hover:bg-blue-500 font-semibold rounded-lg shadow-lg transition-all"
+                  >
+                    {connector.name}
+                  </button>
+                ))}
+              </div>
+              <div className="text-center mt-4">
+                <p>Status: {status}</p>
+                <p className="text-red-400">{error?.message}</p>
+              </div>
             </div>
-            <div className="text-center mt-4">
-              <p>Status: {status}</p>
-              <p className="text-red-400">{error?.message}</p>
-            </div>
-          </div>
-        </main>
+          )}
+        </div>
       </div>
     </div>
   );

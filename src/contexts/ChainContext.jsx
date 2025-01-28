@@ -1,9 +1,17 @@
-import React, { createContext, useContext, useState, useMemo } from "react";
-import { useReadContract, useAccount } from "wagmi";
+import React, { createContext, useContext, useState } from "react";
+import { useAccount } from "wagmi";
 import { getBalance, readContract } from "@wagmi/core";
+import { formatUnits } from "viem";
 import { config } from "../config.ts";
 
-import { tokenABI } from "../contracts/tokenABI.ts";
+import { mockUSDT_ABI } from "../contracts/mockUSDT_ABI.ts";
+import { werewolfToken_ABI } from "../contracts/werewolfToken_ABI.ts";
+import { tokenSale_ABI } from "../contracts/tokenSale_ABI.ts";
+import { dao_ABI } from "../contracts/dao_ABI.ts";
+import { staking_ABI } from "../contracts/staking_ABI.ts";
+import { companiesHouse_ABI } from "../contracts/companiesHouse_ABI.ts";
+
+import contractsAddresses from "../utils/contracts-addresses.json";
 
 // Create the context
 const ChainContext = createContext(null);
@@ -11,132 +19,256 @@ const ChainContext = createContext(null);
 export const ChainProvider = ({ children }) => {
   const account = useAccount();
 
-  const [ETHBalance, setETHBalance] = useState();
-  const [tokenBalance, setTokenBalance] = useState();
-  const [tokenTotSupply, setTokenTotSupply] = useState();
+  const [ETHBalance, setETHBalance] = useState(0);
+  const [USDTBalance, setUSDTBalance] = useState(0);
+  const [tokenBalance, setTokenBalance] = useState(0);
+  const [treasuryBalance, setTreasuryBalance] = useState(0);
+  const [tokenTotSupply, setTokenTotSupply] = useState(0);
+  const [amountInTokenSale, setAmountInTokenSale] = useState(0);
+  const [tokenPrice, setTokenPrice] = useState(0);
+  const [proposalCost, setProposalCost] = useState(0);
+  const [wlfDecimals, setWlfDecimals] = useState(0);
+
+  const [proposals, setProposals] = useState([]); // List of proposals
+
+  const [wlfTokenABI, setWlfTokenABI] = useState(werewolfToken_ABI);
+  const [usdtABI, setUsdtABI] = useState(mockUSDT_ABI);
+  const [tokenSaleABI, setTokenSaleABI] = useState(tokenSale_ABI);
+  const [daoABI, setDaoABI] = useState(dao_ABI);
+  const [stakingABI, setStakingABI] = useState(staking_ABI);
+  const [companiesHouseABI, setCompaniesHouseABI] =
+    useState(companiesHouse_ABI);
 
   const getETHBalance = async () => {
-    console.log(account.chainId);
-
     const account_balance = await getBalance(config, {
       address: account.address,
       chainId: account.chainId,
     });
-    // console.log(account_balance);
-
     setETHBalance(account_balance);
   };
 
+  const getTreasuryBalance = async () => {
+    const chainId = account.chainId;
+    const addresses = contractsAddresses[chainId];
+
+    const decimals = await readContract(config, {
+      abi: wlfTokenABI.abi,
+      address: wlfTokenABI.address,
+      functionName: "decimals",
+    });
+
+    setWlfDecimals(decimals);
+
+    const rawBalance = await readContract(config, {
+      abi: wlfTokenABI.abi,
+      address: wlfTokenABI.address,
+      functionName: "balanceOf",
+      args: [addresses.Treasury],
+    });
+
+    const readableBalance = convertToReadableInput(rawBalance, decimals);
+    console.log(readableBalance);
+
+    setTreasuryBalance(readableBalance);
+  };
+
+  const getAmountInTokenSale = async () => {
+    const decimals = await readContract(config, {
+      abi: wlfTokenABI.abi,
+      address: wlfTokenABI.address,
+      functionName: "decimals",
+    });
+
+    const rawBalance = await readContract(config, {
+      abi: wlfTokenABI.abi,
+      address: wlfTokenABI.address,
+      functionName: "balanceOf",
+      args: [tokenSaleABI.address],
+    });
+
+    const readableBalance = convertToReadableInput(rawBalance, decimals);
+    setAmountInTokenSale(readableBalance);
+  };
+
   const getTokenBalance = async () => {
-    try {
-      // Fetch the token's decimals
-      const decimals = await readContract(config, {
-        abi: tokenABI.abi,
-        address: tokenABI.address,
-        functionName: "decimals",
-      });
-      // console.log(`Token Decimals: ${decimals}`);
+    const decimals = await readContract(config, {
+      abi: wlfTokenABI.abi,
+      address: wlfTokenABI.address,
+      functionName: "decimals",
+    });
 
-      // Fetch the raw balance as BigInt
-      const rawBalance = await readContract(config, {
-        abi: tokenABI.abi,
-        address: tokenABI.address,
-        functionName: "balanceOf",
-        args: [account.address],
-      });
+    const rawBalance = await readContract(config, {
+      abi: wlfTokenABI.abi,
+      address: wlfTokenABI.address,
+      functionName: "balanceOf",
+      args: [account.address],
+    });
 
-      // console.log(`Raw Balance (BigInt): ${rawBalance}`);
-
-      // Convert raw balance to human-readable format as a string
-      const rawBalanceStr = rawBalance.toString();
-      const decimalsInt = parseInt(decimals, 10);
-
-      let readableBalance;
-      if (rawBalanceStr.length > decimalsInt) {
-        const wholePart = rawBalanceStr.slice(0, -decimalsInt); // Whole number part
-        const fractionalPart = rawBalanceStr.slice(-decimalsInt); // Fractional part
-        readableBalance = `${wholePart}.${fractionalPart}`.replace(
-          /\.?0+$/,
-          ""
-        ); // Trim trailing zeros
-      } else {
-        const fractionalPart = rawBalanceStr.padStart(decimalsInt, "0"); // Pad with leading zeros if needed
-        readableBalance = `0.${fractionalPart}`.replace(/\.?0+$/, ""); // Trim trailing zeros
-      }
-
-      // console.log(`Readable Balance: ${readableBalance}`);
-
-      // Set the token balance
-      setTokenBalance(readableBalance);
-    } catch (error) {
-      console.error("Error fetching token balance:", error);
-    }
+    const readableBalance = convertToReadableInput(rawBalance, decimals);
+    setTokenBalance(readableBalance);
   };
 
   const getTokenTotalSupply = async () => {
+    const decimals = await readContract(config, {
+      abi: wlfTokenABI.abi,
+      address: wlfTokenABI.address,
+      functionName: "decimals",
+    });
+
+    const rawSupply = await readContract(config, {
+      abi: wlfTokenABI.abi,
+      address: wlfTokenABI.address,
+      functionName: "totalSupply",
+    });
+
+    const readableSupply = convertToReadableInput(rawSupply, decimals);
+    setTokenTotSupply(readableSupply);
+  };
+
+  const getTokenPrice = async () => {
+    const decimals = await readContract(config, {
+      abi: wlfTokenABI.abi,
+      address: wlfTokenABI.address,
+      functionName: "decimals",
+    });
+
+    const rawPrice = await readContract(config, {
+      abi: tokenSaleABI.abi,
+      address: tokenSaleABI.address,
+      functionName: "price",
+    });
+
+    const readablePrice = convertToReadableInput(rawPrice, decimals);
+    setTokenPrice(readablePrice);
+  };
+
+  const loadTokenSaleContract = async () => {
+    getAmountInTokenSale();
+    getTokenPrice();
+  };
+
+  const getProposalCost = async () => {
+    const rawBalance = await readContract(config, {
+      abi: daoABI.abi,
+      address: daoABI.address,
+      functionName: "proposalCost",
+    });
+    const decimals = await readContract(config, {
+      abi: wlfTokenABI.abi,
+      address: wlfTokenABI.address,
+      functionName: "decimals",
+    });
+
+    const readableBalance = convertToReadableInput(rawBalance, decimals);
+    setProposalCost(rawBalance);
+  };
+
+  // Fetch proposals from the contract
+  const fetchProposals = async () => {
     try {
-      // Fetch the token's decimals
-      const decimals = await readContract(config, {
-        abi: tokenABI.abi,
-        address: tokenABI.address,
-        functionName: "decimals",
+      const fetchedProposals = [];
+
+      const proposalCount = await readContract(config, {
+        abi: daoABI.abi,
+        address: daoABI.address,
+        functionName: "proposalCount",
       });
+      console.log(proposalCount);
 
-      // Fetch the total supply as BigInt
-      const rawSupply = await readContract(config, {
-        abi: tokenABI.abi,
-        address: tokenABI.address,
-        functionName: "totalSupply",
-      });
+      for (let i = 1; i < proposalCount; i++) {
+        const proposal = await readContract(config, {
+          abi: daoABI.abi,
+          address: daoABI.address,
+          functionName: "proposals",
+          args: [i],
+        });
+        console.log(proposal);
 
-      // Convert raw supply to human-readable format as a string
-      const rawSupplyStr = rawSupply.toString();
-      const decimalsInt = parseInt(decimals, 10);
-
-      let readableSupply;
-      if (rawSupplyStr.length > decimalsInt) {
-        const wholePart = rawSupplyStr.slice(0, -decimalsInt); // Whole number part
-        const fractionalPart = rawSupplyStr.slice(-decimalsInt); // Fractional part
-        readableSupply = `${wholePart}.${fractionalPart}`.replace(/\.?0+$/, ""); // Trim trailing zeros
-      } else {
-        const fractionalPart = rawSupplyStr.padStart(decimalsInt, "0"); // Pad with leading zeros if needed
-        readableSupply = `0.${fractionalPart}`.replace(/\.?0+$/, ""); // Trim trailing zeros
+        fetchedProposals.push({
+          id: Number(i), // Convert to a number if `i` is not already
+          title: `Proposal #${i}`, // Replace with the actual title if available
+          votesFor: Number(proposal[2]), // Convert BigInt to a number
+          votesAgainst: Number(proposal[3]), // Convert BigInt to a number
+          proposer: proposal[1], // Address remains as a string
+          // proposalState: proposal.proposalState, // Assuming this is already a readable value
+          startTime: new Date(Number(proposal[4]) * 1000).toLocaleString(), // Convert BigInt and transform to readable date
+          endTime: new Date(Number(proposal[5]) * 1000).toLocaleString(), // Convert BigInt and transform to readable date
+          eta: Number(proposal[6]), // Convert BigInt to a number
+        });
       }
-      // console.log(readableSupply);
 
-      // Set the token total supply
-      setTokenTotSupply(readableSupply);
+      console.log(fetchedProposals);
+
+      setProposals(fetchedProposals);
     } catch (error) {
-      console.error("Error fetching token total supply:", error);
+      console.error("Error fetching proposals:", error);
     }
   };
 
-  // loadContracts function
+  const importContractsAddresses = () => {
+    const chainId = account.chainId;
+    const addresses = contractsAddresses[chainId];
+
+    usdtABI.address = addresses.USDT;
+    tokenSaleABI.address = addresses.TokenSale;
+    wlfTokenABI.address = addresses.WerewolfToken;
+    daoABI.address = addresses.DAO;
+    stakingABI.address = addresses.Staking;
+    companiesHouseABI.address = addresses.CompaniesHouse;
+
+    setUsdtABI(usdtABI);
+    setWlfTokenABI(wlfTokenABI);
+    setTokenSaleABI(tokenSaleABI);
+    setDaoABI(daoABI);
+    setStakingABI(stakingABI);
+    setCompaniesHouseABI(companiesHouseABI);
+  };
+
   const loadContracts = async () => {
     try {
-      await getETHBalance(); // TODO: move it somewhere else
-
+      importContractsAddresses();
+      await getTreasuryBalance();
+      await getETHBalance();
       await getTokenBalance();
-
       await getTokenTotalSupply();
+      await loadTokenSaleContract();
+      await getProposalCost();
+      await fetchProposals();
     } catch (error) {
       console.error(error);
     }
   };
 
-  // Memoize the context value to prevent unnecessary re-renders
-  const contextValue = useMemo(
-    () => ({
-      loadContracts,
-      tokenBalance: tokenBalance ? tokenBalance : null,
-      tokenTotSupply: tokenTotSupply ? tokenTotSupply : null,
-      ETHBalance: ETHBalance ? ETHBalance : null,
-    }),
-    [loadContracts, tokenBalance, ETHBalance, tokenTotSupply]
-  );
+  const contextValue = {
+    tokenBalance: tokenBalance || null,
+    tokenTotSupply: tokenTotSupply || null,
+    ETHBalance: ETHBalance || null,
+    amountInTokenSale: amountInTokenSale || null,
+    tokenPrice: tokenPrice || null,
+    account,
+    usdtABI,
+    tokenSaleABI,
+    wlfTokenABI,
+    daoABI,
+    stakingABI,
+    companiesHouseABI,
+    treasuryBalance,
+    proposalCost,
+    proposals,
+    wlfDecimals,
+  };
 
   return (
-    <ChainContext.Provider value={contextValue}>
+    <ChainContext.Provider
+      value={{
+        ...contextValue,
+        loadContracts,
+        getTreasuryBalance,
+        getProposalCost,
+        fetchProposals,
+        convertToReadableInput,
+      }}
+    >
       {children}
     </ChainContext.Provider>
   );
@@ -149,4 +281,18 @@ export const useChain = () => {
     throw new Error("useChain must be used within a ChainProvider");
   }
   return context;
+};
+
+const convertToReadableInput = (rawInput, decimals) => {
+  const rawInputStr = rawInput.toString();
+  const decimalsInt = parseInt(decimals, 10);
+
+  if (rawInputStr.length > decimalsInt) {
+    const wholePart = rawInputStr.slice(0, -decimalsInt);
+    const fractionalPart = rawInputStr.slice(-decimalsInt);
+    return `${wholePart}.${fractionalPart}`.replace(/\.?0+$/, ""); // Trim trailing zeros
+  } else {
+    const fractionalPart = rawInputStr.padStart(decimalsInt, "0");
+    return `0.${fractionalPart}`.replace(/\.?0+$/, ""); // Trim trailing zeros
+  }
 };

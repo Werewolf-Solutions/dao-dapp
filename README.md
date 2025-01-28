@@ -4,21 +4,54 @@
 
 `npm i`
 
+Make sure dao-dapp is in same parent folder of dao-project and you deployed smart contracts, in dao-project/ run `make deploy-local`
+
+```
+parent_folder/
+  dao-dapp
+  dao-project
+```
+
 `npm start`
-
-# Addresses
-
-Treasury: 0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0
-TimeLock: 0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9
-WerewolfToken: 0x0165878A594ca255338adfa4d48449f69242Eb8F
-Staking: 0x8A791620dd6260079BF849Dc5567aDC3F2FdC318
-DAO: 0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e
-TokenSale: 0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82
 
 # TODO
 
-- [] **token sale page:** buy tokens
+- [] DAO
 
-- [] **dao page:** make it closer to what it would look like. Add targets and so on
+  - [x] create proposal
 
-- [] re-write errorPage
+  - [>] queue proposal
+
+  - [] execute proposal
+
+- [] CompaniesHouse
+
+  - [] create company
+
+  - [] delete company
+
+  - [] edit company
+
+  - [] hire employee
+
+  - [] fire employee
+
+  - [] pay employees
+
+- [] TokenSale
+
+  - [] buy tokens with USDC, USDT, WBTC, ETH and any other allowed token chosen in DAO
+
+- [] Staking
+
+  - [] see staked positions
+
+  - [] stake tokens
+
+  - [] unstake and withdraw tokens
+
+# bugs/notes/questions
+
+- why don't I get proposalState?
+
+- why datas, targets, signatures are not stored in proposal? or at least why they are not shown in DAO abi?

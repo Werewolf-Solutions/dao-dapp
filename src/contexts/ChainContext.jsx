@@ -184,16 +184,25 @@ export const ChainProvider = ({ children }) => {
         });
         console.log(proposal);
 
+        const proposalState = await readContract(config, {
+          abi: daoABI.abi,
+          address: daoABI.address,
+          functionName: "getProposalState",
+          args: [proposal[1]],
+        });
+        console.log(proposalState);
+
         fetchedProposals.push({
-          id: Number(i), // Convert to a number if `i` is not already
-          title: `Proposal #${i}`, // Replace with the actual title if available
-          votesFor: Number(proposal[2]), // Convert BigInt to a number
-          votesAgainst: Number(proposal[3]), // Convert BigInt to a number
-          proposer: proposal[1], // Address remains as a string
+          id: Number(proposal[1]), // Convert to a number if `i` is not already
+          state: proposalState,
+          title: `Proposal #${proposal[1]}`, // Replace with the actual title if available
+          votesFor: Number(proposal[3]), // Convert BigInt to a number
+          votesAgainst: Number(proposal[4]), // Convert BigInt to a number
+          proposer: proposal[2], // Address remains as a string
           // proposalState: proposal.proposalState, // Assuming this is already a readable value
-          startTime: new Date(Number(proposal[4]) * 1000).toLocaleString(), // Convert BigInt and transform to readable date
-          endTime: new Date(Number(proposal[5]) * 1000).toLocaleString(), // Convert BigInt and transform to readable date
-          eta: Number(proposal[6]), // Convert BigInt to a number
+          startTime: new Date(Number(proposal[5]) * 1000).toLocaleString(), // Convert BigInt and transform to readable date
+          endTime: new Date(Number(proposal[6]) * 1000).toLocaleString(), // Convert BigInt and transform to readable date
+          eta: Number(proposal[7]), // Convert BigInt to a number
         });
       }
 

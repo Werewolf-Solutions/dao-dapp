@@ -1,8 +1,30 @@
 import React, { useState, useEffect } from "react";
 import { useChain } from "../contexts/ChainContext";
-import { writeContract, readContract, watchContractEvent } from "@wagmi/core";
+import {
+  writeContract,
+  readContract,
+  watchContractEvent,
+  getBlock,
+} from "@wagmi/core";
 import { encodeAbiParameters, parseUnits } from "viem";
 import { config } from "../config.ts";
+import { client } from "../config.ts";
+
+async function simulateBlocks(num) {
+  // Ensure num is a valid number of blocks to simulate
+  if (num <= 0) {
+    throw new Error("Number of blocks to simulate must be greater than 0.");
+  }
+  await client.request({
+    method: "anvil_increaseTime",
+    params: [num],
+  });
+
+  await client.request({
+    method: "anvil_mine",
+    params: [],
+  });
+}
 
 export default function DAO() {
   const {
@@ -25,6 +47,8 @@ export default function DAO() {
   const [targets, setTargets] = useState(""); // Targets input
   const [signatures, setSignatures] = useState(""); // Signatures input
   const [datas, setDatas] = useState(""); // Data input
+
+  const [guardian, setGuardian] = useState("");
 
   const testInputs = () => {
     setNewProposalTitle("Proposal to start a token sale");
@@ -59,17 +83,16 @@ export default function DAO() {
     setDatas(`${transferProposalCallData}`, `${saleProposalCallData}`);
   };
 
-  // createProposal(address[] memory _targets, string[] memory _signatures, bytes[] memory _datas)
   const handleCreateProposal = async () => {
     if (!newProposalTitle.trim() || !targets || !signatures || !datas) return;
 
-    const targetArray = targets.split(",").map((t) => t.trim());
-    const signatureArray = signatures.split(",").map((s) => s.trim());
-    const dataArray = datas.split(",").map((d) => d.trim());
+    // const targetArray = targets.split(",").map((t) => t.trim());
+    // const signatureArray = signatures.split(",").map((s) => s.trim());
+    // const dataArray = datas.split(",").map((d) => d.trim());
 
-    console.log(targetArray);
-    console.log(signatureArray);
-    console.log(dataArray);
+    // console.log(targetArray);
+    // console.log(signatureArray);
+    // console.log(dataArray);
 
     try {
       const unwatch = watchContractEvent(config, {
@@ -88,38 +111,25 @@ export default function DAO() {
         args: [daoABI.address, proposalCost],
       });
 
-      const saleTokenAmount = parseUnits("10000", 18);
-      const saleTokenPrice = parseUnits("0.05", 18);
+      const mintAmount = parseUnits("10", 18); // 10 WLF
 
-      // Transfer WLF to token sale contract
-      const transferProposalCallData = encodeAbiParameters(
-        [
-          { name: "to", type: "address" },
-          { name: "amount", type: "uint256" },
-        ],
-        [tokenSaleABI.address, saleTokenAmount]
-      );
-
-      // Start sale
-      const saleProposalCallData = encodeAbiParameters(
-        [
-          { name: "_amount", type: "uint256" },
-          { name: "_price", type: "uint256" },
-        ],
-        [saleTokenAmount, saleTokenPrice]
+      // Mint call data
+      const mintProposalCallData = encodeAbiParameters(
+        [{ name: "amount", type: "uint256" }],
+        [mintAmount]
       );
       await writeContract(config, {
         abi: daoABI.abi,
         address: daoABI.address,
         functionName: "createProposal",
         args: [
-          [tokenSaleABI.address],
-          ["startSale(uint256,uint256)"],
-          [saleProposalCallData],
+          [wlfTokenABI.address],
+          ["mint(uint256 amount)"],
+          [mintProposalCallData],
         ], // [targetArray, signatureArray, dataArray],
       });
 
-      getTreasuryBalance();
+      await getTreasuryBalance();
       await fetchProposals();
 
       setNewProposalTitle("");
@@ -134,30 +144,40 @@ export default function DAO() {
     }
   };
 
+  const getGuardian = async () => {
+    if (daoABI.address != "0x") {
+      const _guardian = await readContract(config, {
+        abi: daoABI.abi,
+        address: daoABI.address,
+        functionName: "guardian",
+      });
+      setGuardian(_guardian);
+    }
+  };
+
+  useEffect(() => {
+    getGuardian();
+  }, []);
+
   const handleVote = async (id, support) => {
     try {
-      const voteAmount = 1; // Mocked vote amount, adjust based on your app logic
-
+      const unwatch = watchContractEvent(config, {
+        abi: daoABI.abi,
+        eventName: "Voted",
+        onLogs(logs) {
+          console.log("Logs changed!", logs);
+        },
+      });
       await writeContract(config, {
         abi: daoABI.abi,
         address: daoABI.address,
         functionName: "vote",
-        args: [id, voteAmount, support],
+        args: [id, support],
       });
 
-      // setProposals((prev) =>
-      //   prev.map((proposal) =>
-      //     proposal.id === id
-      //       ? {
-      //           ...proposal,
-      //           votesFor: support ? proposal.votesFor + 1 : proposal.votesFor,
-      //           votesAgainst: !support
-      //             ? proposal.votesAgainst + 1
-      //             : proposal.votesAgainst,
-      //         }
-      //       : proposal
-      //   )
-      // );
+      await fetchProposals();
+
+      unwatch();
     } catch (error) {
       console.error("Error voting:", error);
     }
@@ -194,6 +214,94 @@ export default function DAO() {
                   className="p-4 bg-gray-800 rounded-lg shadow-lg space-y-2"
                 >
                   <h3 className="text-xl font-bold">{proposal.title}</h3>
+                  {guardian === account.address && (
+                    <div>
+                      <button
+                        className="px-6 py-3 bg-[#8e2421] text-white hover:bg-[#8e25219d] font-semibold rounded-lg shadow-lg transition-all"
+                        onClick={async () => {
+                          const blockNumber = await getBlock(config);
+
+                          const blocks = 259200; // 3 days in seconds
+
+                          console.log(
+                            new Date(
+                              Number(blockNumber.timestamp) * 1000
+                            ).toLocaleString()
+                          );
+
+                          console.log(blockNumber.number);
+                          await simulateBlocks(259200);
+                          const blockNumberAfter = await getBlock(config);
+
+                          console.log(blockNumberAfter.number);
+                          console.log(
+                            new Date(
+                              Number(blockNumberAfter.timestamp) * 1000
+                            ).toLocaleString()
+                          );
+                        }}
+                      >
+                        Simulate voting period
+                      </button>
+                      <button
+                        className="px-6 py-3 bg-[#8e2421] text-white hover:bg-[#8e25219d] font-semibold rounded-lg shadow-lg transition-all"
+                        onClick={async () => {
+                          const unwatch = watchContractEvent(config, {
+                            abi: daoABI.abi,
+                            eventName: "ProposalQueued",
+                            onLogs(logs) {
+                              console.log("Logs changed!", logs);
+                            },
+                          });
+                          await writeContract(config, {
+                            abi: daoABI.abi,
+                            address: daoABI.address,
+                            functionName: "queueProposal",
+                            args: [proposal.id],
+                          });
+                          await fetchProposals();
+
+                          unwatch();
+                        }}
+                      >
+                        Queue
+                      </button>
+                      <button
+                        className="px-6 py-3 bg-[#8e2421] text-white hover:bg-[#8e25219d] font-semibold rounded-lg shadow-lg transition-all"
+                        onClick={async () => {
+                          await writeContract(config, {
+                            abi: daoABI.abi,
+                            address: daoABI.address,
+                            functionName: "executeProposal",
+                            args: [proposal.id],
+                          });
+                          await fetchProposals();
+
+                          await getTreasuryBalance();
+                        }}
+                      >
+                        Execute
+                      </button>
+                      <button
+                        className="px-6 py-3 bg-[#8e2421] text-white hover:bg-[#8e25219d] font-semibold rounded-lg shadow-lg transition-all"
+                        onClick={async () => {
+                          await writeContract(config, {
+                            abi: daoABI.abi,
+                            address: daoABI.address,
+                            functionName: "approveProposal",
+                            args: [proposal.id],
+                          });
+                          await fetchProposals();
+                        }}
+                      >
+                        Approve
+                      </button>
+                    </div>
+                  )}
+                  <p>
+                    <span className="font-normal">State:</span>{" "}
+                    <span className="font-extrabold">{proposal.state}</span>
+                  </p>
                   <p>
                     <span className="font-semibold">Proposer:</span>{" "}
                     {proposal.proposer}

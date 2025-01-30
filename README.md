@@ -16,9 +16,9 @@ parent_folder/
 
 # TODO
 
-- [] DAO
+- [>] finish to write src/utils/importABI.js
 
-  - [x] create proposal
+- [] DAO
 
   - [>] queue proposal
 
@@ -55,3 +55,7 @@ parent_folder/
 - why don't I get proposalState?
 
 - why datas, targets, signatures are not stored in proposal? or at least why they are not shown in DAO abi?
+
+- what if I create a proposal to start a sale with a sale already active? what are other critical points like that?
+
+- vote: handle if vote fails and other scenarios like already voted and so on

@@ -135,20 +135,84 @@ export const dao_ABI = {
     },
     {
       type: "function",
+      name: "getProposalState",
+      inputs: [
+        {
+          name: "_proposalId",
+          type: "uint256",
+          internalType: "uint256",
+        },
+      ],
+      outputs: [
+        {
+          name: "status",
+          type: "string",
+          internalType: "string",
+        },
+      ],
+      stateMutability: "view",
+    },
+    {
+      type: "function",
       name: "proposals",
-      inputs: [{ name: "", type: "uint256", internalType: "uint256" }],
+      inputs: [
+        {
+          name: "",
+          type: "uint256",
+          internalType: "uint256",
+        },
+      ],
       outputs: [
         {
           name: "proposalState",
           type: "uint8",
           internalType: "enum DAO.ProposalState",
         },
-        { name: "proposer", type: "address", internalType: "address" },
-        { name: "votesFor", type: "uint256", internalType: "uint256" },
-        { name: "votesAgainst", type: "uint256", internalType: "uint256" },
-        { name: "startTime", type: "uint256", internalType: "uint256" },
-        { name: "endTime", type: "uint256", internalType: "uint256" },
-        { name: "eta", type: "uint256", internalType: "uint256" },
+        {
+          name: "id",
+          type: "uint256",
+          internalType: "uint256",
+        },
+        {
+          name: "proposer",
+          type: "address",
+          internalType: "address",
+        },
+        {
+          name: "votesFor",
+          type: "uint256",
+          internalType: "uint256",
+        },
+        {
+          name: "votesAgainst",
+          type: "uint256",
+          internalType: "uint256",
+        },
+        {
+          name: "startTime",
+          type: "uint256",
+          internalType: "uint256",
+        },
+        {
+          name: "endTime",
+          type: "uint256",
+          internalType: "uint256",
+        },
+        {
+          name: "eta",
+          type: "uint256",
+          internalType: "uint256",
+        },
+        {
+          name: "canceled",
+          type: "bool",
+          internalType: "bool",
+        },
+        {
+          name: "executed",
+          type: "bool",
+          internalType: "bool",
+        },
       ],
       stateMutability: "view",
     },
@@ -218,9 +282,16 @@ export const dao_ABI = {
       type: "function",
       name: "vote",
       inputs: [
-        { name: "_proposalId", type: "uint256", internalType: "uint256" },
-        { name: "_voteAmount", type: "uint256", internalType: "uint256" },
-        { name: "_support", type: "bool", internalType: "bool" },
+        {
+          name: "_proposalId",
+          type: "uint256",
+          internalType: "uint256",
+        },
+        {
+          name: "_support",
+          type: "bool",
+          internalType: "bool",
+        },
       ],
       outputs: [],
       stateMutability: "nonpayable",

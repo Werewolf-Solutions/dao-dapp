@@ -200,8 +200,8 @@ export const ChainProvider = ({ children }) => {
           votesAgainst: Number(proposal[4]), // Convert BigInt to a number
           proposer: proposal[2], // Address remains as a string
           // proposalState: proposal.proposalState, // Assuming this is already a readable value
-          startTime: new Date(Number(proposal[5]) * 1000).toLocaleString(), // Convert BigInt and transform to readable date
-          endTime: new Date(Number(proposal[6]) * 1000).toLocaleString(), // Convert BigInt and transform to readable date
+          startTime: proposal[5], // Convert BigInt and transform to readable date
+          endTime: proposal[6], // Convert BigInt and transform to readable date
           eta: Number(proposal[7]), // Convert BigInt to a number
         });
       }

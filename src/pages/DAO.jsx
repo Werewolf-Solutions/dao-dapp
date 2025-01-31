@@ -5,6 +5,7 @@ import {
   readContract,
   watchContractEvent,
   getBlock,
+  getTransaction,
 } from "@wagmi/core";
 import { encodeAbiParameters, parseUnits } from "viem";
 import { config } from "../config.ts";
@@ -49,6 +50,7 @@ export default function DAO() {
   const [datas, setDatas] = useState(""); // Data input
 
   const [guardian, setGuardian] = useState("");
+  const [block, setBlock] = useState({});
 
   const testInputs = () => {
     setNewProposalTitle("Proposal to start a token sale");
@@ -159,6 +161,17 @@ export default function DAO() {
     getGuardian();
   }, []);
 
+  async function getBlockNumber() {
+    const blockNumber = await getBlock(config);
+    console.log(blockNumber);
+
+    setBlock(blockNumber);
+  }
+
+  useEffect(() => {
+    getBlockNumber();
+  }, []);
+
   const handleVote = async (id, support) => {
     try {
       const unwatch = watchContractEvent(config, {
@@ -188,6 +201,10 @@ export default function DAO() {
       <div className="w-full max-w-md bg-gray-800 p-6 rounded-lg shadow-lg text-center">
         <h1 className="text-4xl font-bold mb-6">DAO Proposals</h1>
 
+        <span>
+          Block: {new Date(Number(block.timestamp) * 1000).toLocaleString()}
+        </span>
+
         <button
           onClick={() => {
             testInputs();
@@ -215,22 +232,20 @@ export default function DAO() {
                 >
                   <h3 className="text-xl font-bold">{proposal.title}</h3>
                   {guardian === account.address && (
-                    <div>
+                    <div className="flex flex-wrap items-center justify-center gap-2">
                       <button
                         className="px-6 py-3 bg-[#8e2421] text-white hover:bg-[#8e25219d] font-semibold rounded-lg shadow-lg transition-all"
                         onClick={async () => {
                           const blockNumber = await getBlock(config);
 
-                          const blocks = 259200; // 3 days in seconds
+                          const seconds =
+                            proposal.endTime - blockNumber.timestamp; // go to end of voting period
 
-                          console.log(
-                            new Date(
-                              Number(blockNumber.timestamp) * 1000
-                            ).toLocaleString()
-                          );
+                          console.log(blockNumber.timestamp);
+                          console.log(proposal.endTime);
+                          console.log(proposal.endTime - blockNumber.timestamp);
 
-                          console.log(blockNumber.number);
-                          await simulateBlocks(259200);
+                          await simulateBlocks(seconds);
                           const blockNumberAfter = await getBlock(config);
 
                           console.log(blockNumberAfter.number);
@@ -239,6 +254,7 @@ export default function DAO() {
                               Number(blockNumberAfter.timestamp) * 1000
                             ).toLocaleString()
                           );
+                          setBlock(blockNumberAfter);
                         }}
                       >
                         Simulate voting period
@@ -246,25 +262,63 @@ export default function DAO() {
                       <button
                         className="px-6 py-3 bg-[#8e2421] text-white hover:bg-[#8e25219d] font-semibold rounded-lg shadow-lg transition-all"
                         onClick={async () => {
-                          const unwatch = watchContractEvent(config, {
-                            abi: daoABI.abi,
-                            eventName: "ProposalQueued",
-                            onLogs(logs) {
-                              console.log("Logs changed!", logs);
-                            },
-                          });
-                          await writeContract(config, {
-                            abi: daoABI.abi,
-                            address: daoABI.address,
-                            functionName: "queueProposal",
-                            args: [proposal.id],
-                          });
-                          await fetchProposals();
+                          try {
+                            const unwatch = watchContractEvent(config, {
+                              abi: daoABI.abi,
+                              eventName: "ProposalQueued",
+                              onLogs(logs) {
+                                console.log("Logs changed!", logs);
+                              },
+                            });
+                            // const delay = await readContract(config, {
+                            //   abi: timelockABI.abi,
+                            //   address: timelockABI.address,
+                            //   functionName: "delay",
+                            //   args: [proposal.id],
+                            // });
+                            // console.log(delay);
+                            const tx = await writeContract(config, {
+                              abi: daoABI.abi,
+                              address: daoABI.address,
+                              functionName: "queueProposal",
+                              args: [proposal.id],
+                            });
+                            const transaction = await getTransaction(config, {
+                              hash: tx,
+                            });
+                            console.log(transaction);
 
-                          unwatch();
+                            await fetchProposals();
+
+                            unwatch();
+                          } catch (error) {
+                            console.error(error);
+                          }
                         }}
                       >
                         Queue
+                      </button>
+                      <button
+                        className="px-6 py-3 bg-[#8e2421] text-white hover:bg-[#8e25219d] font-semibold rounded-lg shadow-lg transition-all"
+                        onClick={async () => {
+                          const proposalState = await readContract(config, {
+                            abi: daoABI.abi,
+                            address: daoABI.address,
+                            functionName: "getProposalState",
+                            args: [proposal.id],
+                          });
+                          console.log(proposalState);
+
+                          const targets = await readContract(config, {
+                            abi: daoABI.abi,
+                            address: daoABI.address,
+                            functionName: "getTargets",
+                            args: [proposal.id],
+                          });
+                          console.log(targets);
+                        }}
+                      >
+                        Get state
                       </button>
                       <button
                         className="px-6 py-3 bg-[#8e2421] text-white hover:bg-[#8e25219d] font-semibold rounded-lg shadow-lg transition-all"
@@ -308,11 +362,13 @@ export default function DAO() {
                   </p>
                   <p>
                     <span className="font-semibold">Start Time:</span>{" "}
-                    {proposal.startTime}
+                    {new Date(
+                      Number(proposal.startTime) * 1000
+                    ).toLocaleString()}
                   </p>
                   <p>
                     <span className="font-semibold">End Time:</span>{" "}
-                    {proposal.endTime}
+                    {new Date(Number(proposal.endTime) * 1000).toLocaleString()}
                   </p>
                   <p>
                     <span className="font-semibold">ETA:</span> {proposal.eta}

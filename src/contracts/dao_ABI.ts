@@ -216,11 +216,21 @@ export const dao_ABI = {
       ],
       stateMutability: "view",
     },
+    // TODO: remove after testing
+    {
+      type: "function",
+      name: "getTargets",
+      inputs: [
+        { name: "_proposalId", type: "uint256", internalType: "uint256" },
+      ],
+      outputs: [{ name: "targets", type: "uint256", internalType: "uint256" }],
+      stateMutability: "view",
+    },
     {
       type: "function",
       name: "queueProposal",
       inputs: [
-        { name: "proposalId", type: "uint256", internalType: "uint256" },
+        { name: "_proposalId", type: "uint256", internalType: "uint256" },
       ],
       outputs: [],
       stateMutability: "nonpayable",

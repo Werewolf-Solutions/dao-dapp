@@ -1,7 +1,44 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
+import { decodeAbiParameters, encodeAbiParameters, parseUnits } from "viem";
+
 export default function Home() {
+  const [encoded, setEncoded] = useState("");
+
+  const handleChange = (e) => {
+    setEncoded(e.target.value);
+  };
+
+  const decode = () => {
+    try {
+      const decodedValue = decodeAbiParameters(
+        [{ name: "amount", type: "uint256" }], // Match the encoding structure
+        [encoded]
+      );
+
+      console.log("Decoded Value:", decodedValue); // Extract the uint256 value
+    } catch (error) {
+      console.error("Decoding failed:", error);
+      alert("Invalid encoded data");
+    }
+  };
+
+  const encode = () => {
+    try {
+      const mintAmount = parseUnits("1000000", 18); // 1000000 WLF
+      const encodedValue = encodeAbiParameters(
+        [{ name: "amount", type: "uint256" }],
+        [mintAmount]
+      );
+
+      console.log("Encoded Value:", encodedValue); // Extract the uint256 value
+    } catch (error) {
+      console.error("Decoding failed:", error);
+      alert("Invalid encoded data");
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col justify-center items-center bg-[#1a202c] text-[#fff]">
       <div className="text-center space-y-4">
@@ -28,6 +65,23 @@ export default function Home() {
           DAO Contracts
         </Link>
       </main>
+
+      {/* <div className="flex flex-col justify-center items-center mt-12">
+        <h1>Decode</h1>
+        <input
+          type="text"
+          name="encodedValue"
+          onChange={handleChange}
+          value={encoded}
+          className="text-black"
+        />
+        <button onClick={decode}>Decode</button>
+      </div>
+
+      <div className="flex flex-col justify-center items-center mt-12">
+        <h1>Encode</h1>
+        <button onClick={encode}>Encode</button>
+      </div> */}
     </div>
   );
 }

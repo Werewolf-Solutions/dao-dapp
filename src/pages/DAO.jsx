@@ -23,7 +23,7 @@ async function simulateBlocks(num) {
 
   await client.request({
     method: "anvil_mine",
-    params: [],
+    params: [num],
   });
 }
 

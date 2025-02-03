@@ -237,6 +237,15 @@ export const dao_ABI = {
     },
     {
       type: "function",
+      name: "getEta",
+      inputs: [
+        { name: "_proposalId", type: "uint256", internalType: "uint256" },
+      ],
+      outputs: [{ name: "eta", type: "uint256", internalType: "uint256" }],
+      stateMutability: "view",
+    },
+    {
+      type: "function",
       name: "queuedTransactions",
       inputs: [{ name: "", type: "bytes32", internalType: "bytes32" }],
       outputs: [{ name: "", type: "bool", internalType: "bool" }],

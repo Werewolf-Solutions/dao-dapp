@@ -192,6 +192,14 @@ export const ChainProvider = ({ children }) => {
         });
         console.log(proposalState);
 
+        const proposalEta = await readContract(config, {
+          abi: daoABI.abi,
+          address: daoABI.address,
+          functionName: "getEta",
+          args: [proposal[1]],
+        });
+        console.log(proposalEta);
+
         fetchedProposals.push({
           id: Number(proposal[1]), // Convert to a number if `i` is not already
           state: proposalState,
@@ -202,7 +210,7 @@ export const ChainProvider = ({ children }) => {
           // proposalState: proposal.proposalState, // Assuming this is already a readable value
           startTime: proposal[5], // Convert BigInt and transform to readable date
           endTime: proposal[6], // Convert BigInt and transform to readable date
-          eta: Number(proposal[7]), // Convert BigInt to a number
+          eta: proposalEta, // Convert BigInt to a number
         });
       }
 
